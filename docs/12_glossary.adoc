@@ -1,0 +1,12 @@
+== 12. Glossary
+
+[cols="1,3"]
+|===
+| Term | Definition
+| **ADR** | Architecture Decision Record. A document that captures an important architectural decision and its context and consequences.
+| **AST** | Abstract Syntax Tree. A tree representation of the abstract syntactic structure of source code. In our case, of a documentation project.
+| **Atomic Write** | An operation that is guaranteed to either complete fully or not at all, preventing partially-written, corrupted data.
+| **Hierarchical Path** | A human-readable path used to identify a specific section within the documentation project, e.g., `chapter-1.section-2`.
+| **MCP** | Model Context Protocol. A specification for how LLM-based agents should interact with external tools and data sources.
+| **Structure Index** | The in-memory data structure that holds the metadata of the entire documentation project for fast lookups.
+|===

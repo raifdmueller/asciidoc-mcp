@@ -1,0 +1,27 @@
+== 11. Risks and Technical Debts
+
+This chapter documents known risks and technical debts.
+
+=== 11.1 Known Risks
+This list is taken from the PRD's risk assessment.
+
+.Risk Assessment
+[cols="1,2,2"]
+|===
+| Risk Level | Description | Mitigation Strategy
+| **High** | **Include Resolution Complexity**: Circular includes or complex, deeply nested dependency chains could lead to infinite loops or poor performance during parsing. | The custom parser must include robust cycle detection and set a reasonable limit for include depth.
+| **High** | **File Corruption**: Concurrent modifications or application crashes could corrupt files. | This is directly mitigated by the atomic write strategy (ADR-004).
+| **High** | **Performance**: The in-memory index for very large projects (>600 pages) could consume excessive memory or slow down startup. | This is mitigated by the current design for the specified scale. If projects grow larger, a move to a persistent index (alternative in ADR-002) might be necessary.
+| **Medium** | **Format Variations**: Different dialects of AsciiDoc/Markdown could be parsed incorrectly. | The custom parser will focus on a well-defined, common subset of the languages. Comprehensive testing with real-world documents is required.
+|===
+
+=== 11.2 Technical Debts
+Technical debt consists of design or implementation choices that are expedient in the short term but may lead to future costs.
+
+.Technical Debt
+[cols="1,2,2"]
+|===
+| Item | Description | Consequence / Repayment Strategy
+| **Custom Parser (ADR-005)** | Building a custom parser is a significant undertaking and creates a complex component that must be maintained. | **Consequence**: High maintenance cost. **Repayment**: As AsciiDoc parsing libraries in Python mature, periodically re-evaluate whether this component can be replaced with a standard, community-maintained library.
+| **No File Watching** | The in-memory index (ADR-002) does not automatically update if files are changed externally (e.g., by a user in a text editor). | **Consequence**: The index can become stale, leading to incorrect data being served. **Repayment**: Implement a file-watching mechanism that triggers a re-indexing of changed files. This was deferred to reduce initial complexity.
+|===

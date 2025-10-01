@@ -1,0 +1,117 @@
+== 6. Runtime View
+
+This chapter illustrates how the system's components collaborate at runtime to fulfill key use cases.
+
+=== 6.1 Scenario: Reading a Document Section
+
+This is the most common read operation. A client requests the content of a specific section using its hierarchical path.
+
+[plantuml, usecase-read-sequence, svg]
+----
+@startuml
+title Sequence Diagram: Reading a Section
+
+participant "MCP Client" as Client
+participant "MCP Server" as Server
+participant "Structure Index" as Idx
+participant "File System" as FS
+
+Client -> Server: GET /section?path=chapter-1.section-2
+activate Server
+
+Server -> Idx: find_section("chapter-1.section-2")
+activate Idx
+Idx --> Server: SectionLocation(file: "chapter1.adoc", start: 10, end: 50)
+deactivate Idx
+
+Server -> FS: read_lines("chapter1.adoc", 10, 50)
+activate FS
+FS --> Server: File Content
+deactivate FS
+
+Server --> Client: 200 OK (Content)
+deactivate Server
+@enduml
+----
+
+=== 6.2 Scenario: Updating a Document Section
+
+This scenario shows the critical write operation. The process must be atomic to ensure data integrity, as required by quality goal REL-1. This is achieved by writing to a temporary file first.
+
+[plantuml, usecase-update-sequence, svg]
+----
+@startuml
+title Sequence Diagram: Updating a Section (Atomic Write)
+
+participant "MCP Client" as Client
+participant "MCP Server" as Server
+participant "File System Handler" as FSH
+participant "File System" as FS
+
+Client -> Server: POST /update_section\n(path: "chapter-1.section-2", content: "New text...")
+activate Server
+
+Server -> FSH: update_section("chapter-1.section-2", "New text...")
+activate FSH
+
+FSH -> FS: copy("chapter1.adoc", "chapter1.adoc.bak")
+FSH -> FS: write_to_temp("chapter1.adoc.tmp", updated_content)
+
+alt successful write
+    FSH -> FS: move("chapter1.adoc.tmp", "chapter1.adoc")
+    FSH -> FS: delete("chapter1.adoc.bak")
+    FSH --> Server: Success
+else write failed
+    FSH -> FS: delete("chapter1.adoc.tmp")
+    FSH -> FS: restore("chapter1.adoc.bak", "chapter1.adoc")
+    FSH --> Server: Error
+end
+
+deactivate FSH
+
+Server --> Client: 200 OK or 500 Error
+deactivate Server
+@enduml
+----
+
+=== 6.3 Scenario: Server Initialization
+
+When the server starts, it needs to parse the entire documentation project to build an in-memory index of the structure. This enables fast lookups for subsequent requests.
+
+[plantuml, usecase-init-sequence, svg]
+----
+@startuml
+title Sequence Diagram: Server Initialization
+
+participant "Operator" as Operator
+participant "MCP Server" as Server
+participant "Document Parser" as Parser
+participant "Structure Index" as Idx
+participant "File System" as FS
+
+Operator -> Server: start()
+activate Server
+
+Server -> FS: list_files("**/*.adoc, **/*.md")
+activate FS
+FS --> Server: file_list
+deactivate FS
+
+loop for each file in file_list
+    Server -> Parser: parse(file)
+    activate Parser
+    Parser -> FS: read_file(file)
+    note right of Parser: Resolves includes
+    Parser --> Server: Document AST
+    deactivate Parser
+
+    Server -> Idx: build_index(AST)
+    activate Idx
+    Idx --> Server: done
+    deactivate Idx
+end
+
+Server --> Operator: Server Ready
+deactivate Server
+@enduml
+----

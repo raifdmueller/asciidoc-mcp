@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "docs-server": {
+      "command": "python3",
+      "args": ["src/mcp_server.py", "."],
+      "cwd": "/home/rdmueller/projects/asciidoc-mcp-q"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+== 3. System Scope and Context
+
+This chapter describes the system's boundaries, its users, and its interactions with external systems.
+
+== Live Demo
+Diese Sektion wurde live während der Demonstration erstellt!
+
+Das docs_server MCP Tool ermöglicht:
+- Hierarchische Navigation durch komplexe Dokumentstrukturen
+- Intelligente Suche mit Relevanz-Ranking
+- Direkte Bearbeitung von Dokumentinhalten
+- Token-effiziente Zugriffe (nur benötigte Teile laden)
+== Demo Features
+Diese Sektion wurde live mit dem docs_server MCP Tool erstellt!
+
+Die wichtigsten Features sind:
+- Hierarchische Navigation durch große Dokumentstrukturen
+- Intelligente Suche über alle Inhalte
+- Direkte Bearbeitung von Sektionen
+- Automatische Include-Auflösung für AsciiDoc
+- Token-effiziente Zugriffe (nur benötigte Inhalte laden)
+== Test Section
+This is updated test content to verify the update functionality works correctly.
+=== 3.1 Business Context
+
+From a business perspective, the MCP Documentation Server acts as a specialized middleware that enables technical users to interact with documentation projects more effectively. It abstracts away the complexity of file-based document structures.
+
+[plantuml, business-context, svg]
+----
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+
+title Business Context for MCP Documentation Server
+
+Person(developer, "Software Developer / Architect", "Works on code and documentation.")
+Person(doc_eng, "Documentation Engineer", "Manages large documentation projects.")
+
+System(mcp_server, "MCP Documentation Server", "Provides structured, hierarchical access to AsciiDoc/Markdown projects.")
+
+System_Ext(doc_project, "Documentation Project", "A collection of AsciiDoc/Markdown files in a Git repository.")
+
+Rel(developer, mcp_server, "Uses", "To analyze, update, and maintain documentation with LLM assistance.")
+Rel(doc_eng, mcp_server, "Uses", "To manage and navigate large-scale documentation projects.")
+Rel_Back(mcp_server, doc_project, "Reads from and writes to")
+@enduml
+----
+
+=== 3.2 Technical Context
+
+On a technical level, the system is accessed by an MCP-compliant client. It interacts directly with the file system to read documentation source files and write back modifications. It is also aware of the version control system (Git) to ensure workflow compatibility.
+
+[plantuml, technical-context, svg]
+----
+@startuml
+!include <C4/C4_Context>
+LAYOUT_WITH_LEGEND()
+
+title Technical Context for MCP Documentation Server
+
+System(mcp_client, "MCP Client (e.g., LLM Agent)", "Initiates requests to view or modify documentation.")
+
+System(mcp_server, "MCP Documentation Server", "The system being built.")
+
+System_Ext(file_system, "File System", "Stores the AsciiDoc/Markdown source files.")
+System_Ext(git, "Git Version Control", "Tracks changes to the documentation files.")
+
+Rel(mcp_client, mcp_server, "Sends requests to", "MCP Protocol over HTTPS")
+Rel(mcp_server, file_system, "Reads/Writes files", "File System API")
+Rel(mcp_server, git, "Is compatible with", "Standard Git commands")
+@enduml
+----

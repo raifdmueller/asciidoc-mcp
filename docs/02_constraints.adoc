@@ -1,0 +1,42 @@
+== 2. Architecture Constraints
+
+This chapter outlines the constraints that shape the architecture of the MCP Documentation Server.
+
+=== 2.1 Technical Constraints
+
+The system must adhere to the following technical constraints, derived directly from the PRD:
+
+.Technical Constraints
+[cols="1,3"]
+|===
+| Constraint | Description
+| **File-System Based** | The solution must not require a database. All data and state are to be managed directly on the file system.
+| **Human-Readable Files** | Source documentation files (AsciiDoc, Markdown) must remain human-readable and editable with standard text editors at all times.
+| **Toolchain Compatibility** | The system must work with existing AsciiDoc and Markdown toolchains without requiring proprietary formats or modifications.
+| **Version Control Integration** | All operations must be compatible with standard Git workflows, ensuring that file changes can be tracked, committed, and reverted.
+|===
+
+=== 2.2 Organizational and Process Constraints
+
+.Organizational Constraints
+[cols="1,3"]
+|===
+| Constraint | Description
+| **Workflow Integration** | The solution must integrate seamlessly into existing developer workflows without imposing significant process changes.
+| **No External Services** | The system must be self-contained and not rely on any external or third-party services for its core functionality.
+| **Phased Development** | The project will be developed in phases (Core Engine, MCP Integration, Web Interface), requiring a modular architecture that supports incremental delivery.
+|===
+
+=== 2.3 Conventions
+
+To ensure consistency and quality, the following conventions will be followed:
+
+.Architectural Conventions
+[cols="1,3"]
+|===
+| Convention | Description
+| **MCP First** | The API design and implementation must be fully compliant with the Model Context Protocol (MCP) standard. This is a primary design driver.
+| **Stateless Principle** | The core server logic will be designed to be as stateless as possible, treating the file system as the single source of truth for all content and structure.
+| **Standard Markup** | The parsers will adhere to common AsciiDoc and Markdown standards. Support for non-standard or esoteric language features is a low priority.
+| **Atomic Operations** | All file modification operations must be designed to be atomic to prevent data corruption and ensure file consistency.
+|===

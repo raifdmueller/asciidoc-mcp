@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "docs-server": {
+      "command": "python3",
+      "args": ["src/mcp_server.py", "."],
+      "cwd": "/home/rdmueller/projects/asciidoc-mcp-q"
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ]
+    },
+    "serena": {
+      "command": "uvx",
+      "args": ["--from", "git+https://github.com/oraios/serena", "serena", "start-mcp-server"]
+    }
+  }
+
+}

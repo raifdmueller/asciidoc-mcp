@@ -1,0 +1,214 @@
+= TODOs
+
+== Issues
+
+=== docs_server indexiert neue Dateien nicht automatisch
+
+**Problem:** Der docs_server erkennt neu erstellte .adoc Dateien nicht automatisch und kann sie daher nicht über die MCP API bearbeiten.
+
+**Details:**
+- Neue Datei `test-docs/mein-test.adoc` erstellt
+- `docs_server___search_content` findet "Hello World" nicht
+- Fallback auf `fs_write` nötig für neue Dateien
+
+**Lösung:** ✅ IMPLEMENTIERT
+- `refresh_index` API-Befehl hinzugefügt
+- Manueller Refresh möglich über MCP API
+
+**Status:** ✅ GELÖST
+
+=== get_structure zeigt gesamte Projektstruktur statt nur test-docs
+
+**Problem:** `docs_server___get_structure` zeigt die komplette Dokumentation des Projekts an, nicht nur die Struktur der Datei `test-docs/mein-test.adoc`.
+
+**Details:**
+- User erwartet nur die Struktur von `mein-test.adoc`
+- Server zeigt alle Dokumente im Projekt (todos.adoc, manual.adoc, etc.)
+- Missverständnis zwischen Einzeldokument vs. Projektstruktur
+
+**Status:** ❌ OFFEN - Klärung der erwarteten Funktionalität nötig
+
+=== get_section API Fehler: 'str' object has no attribute 'id'
+
+**Problem:** `docs_server___get_section` wirft einen internen Fehler beim Aufruf.
+
+**Details:**
+- Fehlercode: -32603
+- Fehlermeldung: "'str' object has no attribute 'id'"
+- Aufruf: `docs_server___get_section {"path": "todos.issues"}`
+- Server-seitiger Bug in der Section-Verarbeitung
+
+**Lösung:** ✅ IMPLEMENTIERT
+- Bug in `get_section` method gefixt: `child.id` → `child.id if hasattr(child, 'id') else str(child)`
+- Bug in `get_structure` method gefixt: Safe children_count berechnung
+- Test hinzugefügt: `test_get_section_bug_fix`
+
+**Status:** ✅ GELÖST
+
+== 🚨 FEHLENDE PRD-REQUIREMENTS (HÖCHSTE PRIORITÄT)
+
+=== Web Server & Interface (Must-Have)
+**Status:** ✅ IMPLEMENTIERT
+- ✅ Simple HTTP server für Visualization Interface (FastAPI)
+- ✅ Document Visualization (Dokumentstruktur anzeigen)
+- ✅ Real-time Diff Display (rot/grün Diffs nach Änderungen)
+- ✅ Navigation Interface (Web UI zum Browsen der Hierarchie)
+- ✅ Startup Script: `./start_web_server.sh`
+
+=== Meta-Information API (Must-Have)
+**Status:** ✅ IMPLEMENTIERT
+- ✅ `get_metadata(path)` → File info, word count, last modified
+- ✅ `get_dependencies()` → Include-tree, cross-references
+- ✅ `validate_structure()` → Consistency check
+
+=== Diff Engine (Core Component)
+**Status:** ✅ IMPLEMENTIERT
+- ✅ Change detection and visualization
+- ✅ Integration mit Web Interface für real-time Diffs
+- ✅ HTML diff generation
+
+== Web Interface Verbesserungen
+
+=== UI/UX Verbesserungen (Neue Anforderungen)
+**Status:** 🔄 IN ARBEIT
+- ✅ Untersektionen sollen sortiert (entsprechend ihrer Position im Dokument) aufgeführt sein
+- ✅ Die Sektionen sollen bis zum letzten Child aufklapbar sein
+- ❌ Sektion anklicken → rechts als vollständiges Dokument anzeigen
+
+**Implementiert:**
+- ✅ `get_structure()` sortiert jetzt nach `line_start` (Dokumentposition)
+- ✅ Web Interface JavaScript sortiert Sections nach `line_start` und Titel
+- ✅ Test hinzugefügt: `test_api_structure_sorted_by_document_position`
+- ✅ Hierarchische Struktur mit `children` Arrays implementiert
+- ✅ Aufklappbare Hierarchie mit ▶/▼ Icons
+- ✅ Rekursive Darstellung aller Ebenen bis zum letzten Child
+- ✅ Test hinzugefügt: `test_api_structure_hierarchical_children`, `test_web_interface_expandable_hierarchy`
+- ✅ Farbkodierte Level (Level 1-4 verschiedene Farben)
+- ✅ Anzeige zeigt Zeilennummer für Debugging: `[line: X]`
+
+=== Content-Extraktion Features (Neue Anforderungen)
+**Status:** ❌ OFFEN
+- `get_diagrams()` → Alle PlantUML/Mermaid Diagramme auflisten
+- `get_tables()` → Alle Tabellen extrahieren und strukturiert zurückgeben
+- `get_code_blocks()` → Code-Snippets nach Sprache filtern
+- `get_images()` → Alle Bilder/Grafiken auflisten
+
+=== Web Interface Bugs (Playwright Test Ergebnisse)
+
+**Status:** ✅ BEHOBEN (TDD London School Ansatz)
+
+==== JavaScript Fehler beim Load Structure
+**Problem:** TypeError beim Aufbau der Hierarchie
+- Fehler: `Cannot read properties of null (reading 'appendChild')`
+- **Status:** ✅ BEHOBEN - Durch korrekte Datenstruktur behoben
+
+==== Fehlende Favicon
+**Problem:** 404 Fehler für favicon.ico
+- Fehler: `Failed to load resource: the server responded with a status of 404`
+- **Status:** ❌ OFFEN - Kosmetisches Problem, niedrige Priorität
+
+==== Fehlende Right Panel für Section Content
+**Problem:** Kein rechtes Panel für Dokumentanzeige
+- Erwartung: Sektion anklicken → rechts als vollständiges Dokument anzeigen
+- Aktuell: Content wird inline unter der Sektion angezeigt
+- **Status:** ❌ OFFEN - Feature noch nicht implementiert (siehe UI/UX Verbesserungen)
+
+==== Fehlende Dokumente und falsche Sortierung
+**Problem:** Kritische Strukturfehler in der Dokumentanzeige
+- **Fehlende Inhalte:** Kapitel 1 (Introduction) wird nicht angezeigt
+- **Falsche Sortierung:** Reihenfolge ist 10,11,12,2,3,4,5,6,7,8,9 statt 1,2,3,4,5,6,7,8,9,10,11,12
+- **Regression:** Andere Dokumente (todos.adoc, manual.adoc, etc.) verschwunden
+- **Status:** ✅ VOLLSTÄNDIG BEHOBEN
+  - Neue `get_main_chapters()` Methode implementiert
+  - Korrekte Erkennung von arc42-Kapiteln auf Level 2
+  - JavaScript-Sortierung nach `chapter_number` statt `line_start`
+  - Alle 12 arc42-Kapitel werden in korrekter Reihenfolge angezeigt (1-12)
+  - Alle anderen Dokumente (23+) werden nach den Kapiteln alphabetisch angezeigt
+  - TDD-Tests implementiert und bestehen alle
+
+**Implementierte Fixes:**
+- ✅ `MCPDocumentationServer.get_main_chapters()` - Erkennt arc42-Kapitel + andere Dokumente
+- ✅ Web-API verwendet neue Methode für `/api/structure`
+- ✅ JavaScript sortiert nach `chapter_number` statt `line_start`
+- ✅ TDD-Tests in `test_web_interface_bugs.py` (4 Tests, alle bestehen)
+- ✅ Regression behoben: Alle Dokumente wieder sichtbar
+
+=== Verbesserungsvorschläge
+
+=== Kritische Verbesserungen
+
+==== Auto-Indexing neuer Dateien
+- File-Watcher für neue .adoc/.md Dateien
+- Automatisches Re-Indexing ohne Server-Neustart
+- `refresh_index` API-Befehl
+
+==== Batch-Operationen
+- `update_multiple_sections` für mehrere Änderungen auf einmal
+- `get_multiple_sections` für effiziente Bulk-Abfragen
+- Transaktionale Updates (alles oder nichts)
+
+=== Navigation & Usability
+
+==== Erweiterte Suche
+- Suche nur in bestimmten Dokumenten/Sektionen
+- Regex-Unterstützung
+- Fuzzy-Search für Pfade
+
+==== Bessere Pfad-Navigation
+- `get_parent_section` / `get_child_sections`
+- `get_siblings` für Navigation auf gleicher Ebene
+- Breadcrumb-Pfade in Antworten
+
+=== Performance & Skalierung
+
+==== Caching
+- In-Memory Cache für häufig abgerufene Sektionen
+- Intelligente Cache-Invalidierung bei Änderungen
+- Kompression für große Inhalte
+
+==== Streaming
+- Streaming für sehr große Sektionen
+- Paginierung bei vielen Suchergebnissen
+- Lazy-Loading von Untersektionen
+
+=== Developer Experience
+
+==== Validierung & Feedback
+- AsciiDoc/Markdown Syntax-Validierung vor Updates
+- Preview-Modus für Änderungen
+- Diff-Anzeige bei Updates
+
+==== Erweiterte Formate
+- PlantUML-Diagramm Extraktion
+- Code-Block Highlighting
+- Tabellen als strukturierte Daten
+
+== MCP-Server Auto-Start Features
+
+=== Automatischer Webserver-Start beim MCP-Server Start
+**Status:** ✅ IMPLEMENTIERT
+
+**Problem:** Der MCP-Server startet nicht automatisch den Webserver
+
+**Lösung:** ✅ VOLLSTÄNDIG IMPLEMENTIERT
+- ✅ Port-Scanning für freie Ports implementiert (`PortScanner` Klasse)
+- ✅ Webserver-Start in MCP-Server Startup-Prozess integriert (`AutoStartManager`)
+- ✅ Browser-Auto-Open Feature implementiert (`BrowserLauncher`)
+- ✅ TDD London School Ansatz mit umfangreichen Tests (12 Unit Tests)
+- ✅ Integration in `MCPDocumentationServer` mit `enable_webserver` Parameter
+- ✅ Webserver unterstützt `--port` Parameter für flexible Port-Konfiguration
+
+**Implementierte Features:**
+- **Port-Scanning:** Automatische Suche nach freien Ports in konfigurierbarem Bereich
+- **Webserver-Management:** Startet/stoppt Webserver-Prozesse automatisch
+- **Browser-Launch:** Öffnet automatisch Browser mit Webserver-URL
+- **Fehlerbehandlung:** Graceful handling bei Port-Konflikten oder Browser-Fehlern
+- **Status-API:** `get_webserver_status()` und `restart_webserver()` Methoden
+
+**Technische Details:**
+- Modular aufgebaut mit separaten Klassen für Port-Scanning, Webserver-Management und Browser-Launch
+- Dependency Injection für einfache Testbarkeit
+- Vollständige Test-Abdeckung mit Mocks (TDD London School)
+- Integration erfolgt automatisch beim MCP-Server Start mit `enable_webserver=True`
+
+**Priorität:** ✅ ABGESCHLOSSEN - Alle Anforderungen erfüllt

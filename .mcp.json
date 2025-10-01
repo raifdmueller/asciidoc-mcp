@@ -1,0 +1,43 @@
+{
+  "mcpServers": {
+    "responsible-vibe-mcp": {
+      "command": "npx",
+      "args": [
+        "responsible-vibe-mcp"
+      ]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp",
+        "--browser", "msedge"
+      ]
+    },
+    "asciidoc-docs-server": {
+      "command": "/home/rdmueller/projects/asciidoc-mcp-q/venv/bin/python3",
+      "args": [
+        "-m",
+        "src.mcp_server",
+        "/home/rdmueller/projects/asciidoc-mcp-q"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/rdmueller/projects/asciidoc-mcp-q"
+      }
+    },
+    "serena": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "--from",
+        "git+https://github.com/oraios/serena",
+        "serena",
+        "start-mcp-server",
+        "--context",
+        "ide-assistant",
+        "--project",
+        "/home/rdmueller/projects/asciidoc-mcp-q"
+      ],
+      "env": {}
+    }
+  }
+}

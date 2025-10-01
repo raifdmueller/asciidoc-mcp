@@ -1,0 +1,34 @@
+== 7. Deployment View
+
+This chapter describes the infrastructure and environment for the MCP Documentation Server.
+
+=== 7.1 Deployment Strategy
+
+The application is designed to be lightweight and self-contained, in line with its constraints (no external services). The recommended deployment strategy is to package the Python application and its dependencies into a Docker container.
+
+The Web Interface (SPA) is a set of static files (HTML, CSS, JS) that can be served by any web server or even directly by the FastAPI backend for simplicity.
+
+=== 7.2 Production Environment
+
+The production environment is envisioned as a single virtual or physical machine running Docker.
+
+[plantuml, deployment-overview, svg]
+----
+@startuml
+!include <C4/C4_Deployment>
+LAYOUT_WITH_LEGEND()
+
+title Deployment Diagram
+
+Deployment_Node('prod_server', 'Production Server', 'e.g. AWS EC2') {
+    Deployment_Node('docker', 'Docker Engine') {
+        Container(api_container, "MCP API Server", "Python/FastAPI")
+        Container(web_server, "Web Server", "Nginx")
+    }
+    Node('doc_folder', 'Documentation Project', 'File System')
+}
+
+Rel(web_server, api_container, "Forwards API calls to", "HTTPS")
+Rel(api_container, doc_folder, "Mounts and interacts with", "File System API")
+@enduml
+----

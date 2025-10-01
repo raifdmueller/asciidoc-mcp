@@ -1,0 +1,65 @@
+== 5. Building Block View
+
+This chapter describes the static decomposition of the system into its key building blocks. We use the C4 model to illustrate the structure at different levels of detail.
+
+=== 5.1 Level 2: System Containers
+
+The MCP Documentation Server system is composed of two main containers: a web-based user interface and the back-end API server. The file system acts as the system's database.
+
+[plantuml, container-overview, svg]
+----
+@startuml
+!include <C4/C4_Container>
+LAYOUT_TOP_DOWN()
+SHOW_LEGEND()
+
+title Container diagram for MCP Documentation Server
+
+Person(user, "Developer / Architect", "Uses the system via an MCP client or web browser.")
+
+System_Boundary(mcp_system, "MCP Documentation Server") {
+    Container(spa, "Web Interface", "JavaScript, HTML, CSS", "Provides a visual representation of the document structure and modification diffs.")
+    Container(api, "MCP API Server", "Python, FastAPI", "Provides MCP-compliant API for structured document access and manipulation.")
+}
+
+System_Ext(file_system, "File System", "Stores the AsciiDoc and Markdown files.")
+
+Rel(user, spa, "Uses", "HTTPS")
+Rel(user, api, "Makes API calls via MCP Client", "HTTPS")
+Rel(spa, api, "Makes API calls", "HTTPS/JSON")
+Rel(api, file_system, "Reads/Writes", "File System API")
+@enduml
+----
+
+=== 5.2 Level 3: Components of the MCP API Server
+
+We now zoom into the `MCP API Server` container. It is composed of several components, each with a distinct responsibility, reflecting a classic layered architecture.
+
+[plantuml, component-detail-api, svg]
+----
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+
+title Component diagram for MCP API Server
+
+Container_Boundary(api, "MCP API Server") {
+    Component(api_endpoints, "API Endpoints", "FastAPI", "Receives MCP requests, validates input, and returns responses.")
+    Component(doc_service, "Document Service", "Python", "Orchestrates the business logic for use cases like get_section or update_section.")
+    Component(parser, "Document Parser", "Python", "Parses AsciiDoc/Markdown files, resolves includes, and builds an Abstract Syntax Tree (AST).")
+    Component(index, "Structure Index", "Python (In-Memory Dictionary)", "Stores the hierarchical structure of the documentation project for fast lookups.")
+    Component(fs_handler, "File System Handler", "Python", "Performs atomic read/write operations on the file system.")
+}
+
+System_Ext(file_system, "File System")
+
+Rel(api_endpoints, doc_service, "Uses", "Executes business logic")
+Rel(doc_service, parser, "Uses", "To get document AST on initialization")
+Rel(doc_service, index, "Uses", "To find section locations")
+Rel(doc_service, fs_handler, "Uses", "To read/write file content")
+
+Rel(parser, fs_handler, "Reads files via")
+Rel(index, parser, "Is built by")
+Rel(fs_handler, file_system, "Interacts with")
+@enduml
+----
