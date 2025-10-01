@@ -14,7 +14,7 @@ class Section:
     line_end: int
     source_file: str  # Relative path to source file
     children: List[str]  # Store child IDs instead of Section objects
-    parent_id: Optional[str] = None  # Store parent ID instead of Section object  # Store parent ID instead of Section object
+    parent_id: Optional[str] = None  # Store parent ID instead of Section object
 
 class DocumentParser:
     def __init__(self, max_include_depth: int = 4):
