@@ -175,7 +175,58 @@ async def root():
             
             .section-children { display: none; }
             .section-children.expanded { display: block; }
-            
+
+            /* File-level styles */
+            .file-item {
+                margin: 10px 0;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                background: white;
+                overflow: hidden;
+            }
+
+            .file-title {
+                font-weight: bold;
+                cursor: pointer;
+                padding: 12px 15px;
+                display: flex;
+                align-items: center;
+                background: linear-gradient(to right, #f8f9fa, #e9ecef);
+                transition: background-color 0.2s;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .file-title:hover {
+                background: linear-gradient(to right, #e9ecef, #dee2e6);
+            }
+
+            .file-name {
+                flex: 1;
+                font-size: 1.1em;
+                color: #495057;
+            }
+
+            .file-info {
+                font-size: 0.9em;
+                color: #6c757d;
+                font-weight: normal;
+                margin-left: 10px;
+            }
+
+            .file-sections {
+                display: none;
+                padding: 10px;
+                background: #f8f9fa;
+            }
+
+            .file-sections.expanded {
+                display: block;
+            }
+
+            .file-sections .section {
+                margin-left: 0;
+            }
+
             .CodeMirror { height: 100%; font-size: 14px; }
             
             .loading { 
@@ -294,24 +345,73 @@ async def root():
             function displayStructure(structure) {
                 const navContent = document.getElementById('navigation-content');
                 navContent.innerHTML = '';
-                
-                const sortedSections = Object.entries(structure).sort((a, b) => {
-                    const aChapterNum = a[1].chapter_number || 999;
-                    const bChapterNum = b[1].chapter_number || 999;
-                    
-                    if (aChapterNum === bChapterNum) {
-                        return a[1].title.localeCompare(b[1].title);
-                    }
-                    
-                    return aChapterNum - bChapterNum;
+
+                // Structure is now grouped by files
+                // Sort files alphabetically
+                const sortedFiles = Object.entries(structure).sort((a, b) => {
+                    return a[1].filename.localeCompare(b[1].filename);
                 });
-                
-                for (const [id, section] of sortedSections) {
-                    const div = createSectionElement(section);
-                    navContent.appendChild(div);
+
+                // Create a file element for each root file
+                for (const [filePath, fileData] of sortedFiles) {
+                    const fileDiv = createFileElement(fileData);
+                    navContent.appendChild(fileDiv);
                 }
             }
-            
+
+            function createFileElement(fileData) {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+
+                const hasSections = fileData.sections && fileData.sections.length > 0;
+                const expandIcon = hasSections ? '▶' : '📄';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'file-title';
+                titleDiv.innerHTML = `
+                    <span class="expand-icon">${expandIcon}</span>
+                    <span class="file-name">📁 ${fileData.filename}</span>
+                    <span class="file-info">(${fileData.section_count} sections)</span>
+                `;
+
+                if (hasSections) {
+                    titleDiv.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        toggleFile(fileData.path, titleDiv);
+                    });
+                }
+
+                div.appendChild(titleDiv);
+
+                if (hasSections) {
+                    const sectionsDiv = document.createElement('div');
+                    sectionsDiv.className = 'file-sections';
+                    sectionsDiv.id = `file-sections-${fileData.path}`;
+
+                    fileData.sections.forEach(section => {
+                        const sectionElement = createSectionElement(section);
+                        sectionsDiv.appendChild(sectionElement);
+                    });
+
+                    div.appendChild(sectionsDiv);
+                }
+
+                return div;
+            }
+
+            function toggleFile(filePath, titleElement) {
+                const sectionsDiv = document.getElementById(`file-sections-${filePath}`);
+                const expandIcon = titleElement.querySelector('.expand-icon');
+
+                if (sectionsDiv.classList.contains('expanded')) {
+                    sectionsDiv.classList.remove('expanded');
+                    expandIcon.textContent = '▶';
+                } else {
+                    sectionsDiv.classList.add('expanded');
+                    expandIcon.textContent = '▼';
+                }
+            }
+
             function createSectionElement(section) {
                 const div = document.createElement('div');
                 div.className = `section level-${section.level}`;
@@ -532,12 +632,12 @@ async def root():
 
 @app.get("/api/structure")
 async def get_structure():
-    """Get document structure - shows main chapters for arc42 documents"""
+    """Get document structure - shows root files with their sections"""
     if not doc_server:
         raise HTTPException(status_code=500, detail="Server not initialized")
     
-    # Use main chapters method for better arc42 support
-    return doc_server.get_main_chapters()
+    # Use root files structure for file-based navigation
+    return doc_server.get_root_files_structure()
 
 @app.get("/api/metadata")
 async def get_metadata(path: Optional[str] = None):

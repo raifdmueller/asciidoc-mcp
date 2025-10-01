@@ -170,6 +170,78 @@ class MCPDocumentationServer:
                     main_chapters[section_id] = section_data
         
         return main_chapters
+
+    def get_root_files_structure(self) -> Dict[str, Any]:
+        """Get structure grouped by root files - shows files as top level with their sections"""
+        from pathlib import Path
+        
+        structure = {}
+        
+        # Iterate over each root file
+        for root_file in self.root_files:
+            # Get absolute path for matching
+            abs_path = str(root_file)
+            
+            # Also get relative path for display
+            try:
+                rel_path = str(root_file.relative_to(self.project_root))
+            except ValueError:
+                rel_path = str(root_file)
+            
+            # Find all sections belonging to this file
+            # Sections may have either absolute or relative paths
+            file_sections = []
+            for section_id, section in self.sections.items():
+                # Try matching both absolute and relative paths
+                if section.source_file == abs_path or section.source_file == rel_path:
+                    # Get section data
+                    children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
+                    
+                    section_data = {
+                        'title': section.title,
+                        'level': section.level,
+                        'id': section_id,
+                        'children_count': children_count,
+                        'line_start': section.line_start,
+                        'line_end': section.line_end,
+                        'source_file': section.source_file,
+                        'children': []
+                    }
+                    file_sections.append((section_id, section_data))
+            
+            # Sort sections by line_start to maintain document order
+            file_sections.sort(key=lambda x: self.sections[x[0]].line_start)
+            
+            # Build hierarchical structure for sections within this file
+            section_map = {}
+            root_sections = []
+            
+            for section_id, section_data in file_sections:
+                section_map[section_id] = section_data
+                
+                # Determine parent within same file
+                if '.' in section_id:
+                    parent_id = '.'.join(section_id.split('.')[:-1])
+                    if parent_id in section_map:
+                        section_map[parent_id]['children'].append(section_data)
+                    else:
+                        # Parent not in same file, treat as root-level
+                        root_sections.append(section_data)
+                else:
+                    # Top-level section
+                    root_sections.append(section_data)
+            
+            # Create file entry
+            if file_sections:  # Only add files that have sections
+                total_sections = len(file_sections)
+                structure[rel_path] = {
+                    'filename': root_file.name,
+                    'path': rel_path,
+                    'section_count': total_sections,
+                    'sections': root_sections
+                }
+        
+        return structure
     
     def get_section(self, path: str) -> Optional[Dict[str, Any]]:
         """Get specific section content"""
