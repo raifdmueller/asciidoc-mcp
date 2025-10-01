@@ -53,14 +53,25 @@ class MCPDocumentationServer:
         self._parse_project()
     
     def _discover_root_files(self):
-        """Find main documentation files (AsciiDoc and Markdown only)"""
+        """Find main documentation files (AsciiDoc and Markdown, including subdirectories)"""
         self.root_files = []  # Clear list before discovering to prevent duplicates
-        # Extended patterns for AsciiDoc and Markdown files
-        patterns = ['*.adoc', '*.ad', '*.asciidoc', '*.md', '*.markdown']
+        
+        # Directories to exclude from search
+        exclude_dirs = {'.venv', 'venv', '.git', '.pytest_cache', '__pycache__', 
+                       'node_modules', '.tox', '.mypy_cache', '.ruff_cache',
+                       '.amazonq', '.serena', '.vibe'}
+        
+        # Extended patterns for AsciiDoc and Markdown files (recursive search)
+        patterns = ['**/*.adoc', '**/*.ad', '**/*.asciidoc', '**/*.md', '**/*.markdown']
         for pattern in patterns:
             for file in self.project_root.glob(pattern):
-                if not file.name.startswith('_'):  # Skip includes
-                    self.root_files.append(file)
+                # Skip files in excluded directories
+                if any(excluded in file.parts for excluded in exclude_dirs):
+                    continue
+                # Skip include files (starting with _)
+                if file.name.startswith('_'):
+                    continue
+                self.root_files.append(file)
     
     def _parse_project(self):
         """Parse all root files and build section index"""
