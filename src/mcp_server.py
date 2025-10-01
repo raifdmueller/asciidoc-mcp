@@ -26,6 +26,7 @@ class MCPDocumentationServer:
         self.diff_engine = DiffEngine()
         self.sections: Dict[str, Section] = {}
         self.root_files = []
+        self.included_files = set()  # Track files that are included by other files
         self.file_watcher = FileWatcher(project_root, self._on_files_changed)
         self._discover_root_files()
         self._parse_project()
@@ -75,9 +76,11 @@ class MCPDocumentationServer:
     
     def _parse_project(self):
         """Parse all root files and build section index"""
+        self.included_files.clear()  # Clear before re-parsing
         for root_file in self.root_files:
-            file_sections = self.parser.parse_project(root_file)
+            file_sections, included = self.parser.parse_project(root_file)
             self.sections.update(file_sections)
+            self.included_files.update(included)
     
     def get_structure(self, max_depth: int = 3) -> Dict[str, Any]:
         """Get hierarchical table of contents up to max_depth, sorted by document position"""
@@ -188,8 +191,12 @@ class MCPDocumentationServer:
         
         structure = {}
         
-        # Iterate over each root file
+        # Iterate over each root file (skip included files)
         for root_file in self.root_files:
+            # Skip files that are included by other files
+            if root_file in self.included_files:
+                continue
+
             # Get absolute path for matching
             abs_path = str(root_file)
             

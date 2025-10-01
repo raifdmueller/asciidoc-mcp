@@ -123,7 +123,7 @@ def test_document_parser(results):
         
         # Test 1: Basic parsing
         try:
-            sections = parser.parse_project(test_dir / "main.adoc")
+            sections, included_files = parser.parse_project(test_dir / "main.adoc")
             results.add_test(
                 "DocumentParser: Basic parsing",
                 len(sections) > 0,
@@ -411,7 +411,7 @@ def test_error_handling(results):
     # Test 1: Invalid file path
     try:
         parser = DocumentParser()
-        sections = parser.parse_project(Path("nonexistent.adoc"))
+        sections, included_files = parser.parse_project(Path("nonexistent.adoc"))
         results.add_test(
             "Error Handling: Invalid file path",
             len(sections) == 0,

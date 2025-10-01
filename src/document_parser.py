@@ -21,11 +21,22 @@ class DocumentParser:
         self.max_include_depth = max_include_depth
         self.processed_files = set()
         
-    def parse_project(self, root_file: Path) -> Dict[str, Section]:
-        """Parse a documentation project starting from root file"""
+    def parse_project(self, root_file: Path) -> Tuple[Dict[str, Section], set]:
+        """Parse a documentation project starting from root file
+
+        Returns:
+            Tuple of (sections_dict, included_files_set)
+            - sections_dict: Dictionary mapping section IDs to Section objects
+            - included_files_set: Set of Path objects for files that were included (excluding root_file)
+        """
         self.processed_files.clear()
         content = self._resolve_includes(root_file, 0)
-        return self._parse_structure(content, str(root_file))
+        sections = self._parse_structure(content, str(root_file))
+
+        # Get included files (all processed files except the root file itself)
+        included_files = {Path(f) for f in self.processed_files if Path(f) != root_file}
+
+        return sections, included_files
     
     def _resolve_includes(self, file_path: Path, depth: int) -> str:
         """Resolve include directives recursively"""
