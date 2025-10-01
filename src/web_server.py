@@ -370,7 +370,7 @@ async def root():
                 titleDiv.className = 'file-title';
                 titleDiv.innerHTML = `
                     <span class="expand-icon">${expandIcon}</span>
-                    <span class="file-name">📁 ${fileData.filename}</span>
+                    <span class="file-name">📄 ${fileData.filename}</span>
                     <span class="file-info">(${fileData.section_count} sections)</span>
                 `;
 
