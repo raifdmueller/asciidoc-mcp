@@ -37,8 +37,8 @@ def test_parser():
     
     try:
         parser = DocumentParser()
-        sections = parser.parse_project(test_file)
-        
+        sections, included_files = parser.parse_project(test_file)
+
         print(f"Found {len(sections)} sections:")
         for section_id, section in sections.items():
             print(f"  {section_id}: {section.title} (level {section.level})")
