@@ -92,6 +92,8 @@ validate_structure() → Consistency check
 - **Document Visualization**: Display processed document structure
 - **Real-time Diff Display**: Show red/green diffs after each modification
 - **Navigation Interface**: Browse document hierarchy via web UI
+- **Content Filtering**: Show only relevant document types (AsciiDoc/Markdown files)
+- **Source Metadata Display**: Display file path and line numbers for each section to enable traceability
 
 ### Nice-to-Have Features
 - **Multiple Format Support**: Support for additional markup formats

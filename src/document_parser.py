@@ -12,8 +12,9 @@ class Section:
     content: str
     line_start: int
     line_end: int
+    source_file: str  # Relative path to source file
     children: List[str]  # Store child IDs instead of Section objects
-    parent_id: Optional[str] = None  # Store parent ID instead of Section object
+    parent_id: Optional[str] = None  # Store parent ID instead of Section object  # Store parent ID instead of Section object
 
 class DocumentParser:
     def __init__(self, max_include_depth: int = 4):
@@ -56,6 +57,14 @@ class DocumentParser:
         current_content = []
         line_num = 0
         
+        # Convert to relative path for portability
+        try:
+            from pathlib import Path
+            rel_source_file = str(Path(source_file).relative_to(self.root_path))
+        except (ValueError, AttributeError):
+            # If relative_to fails or root_path not set, use source_file as-is
+            rel_source_file = source_file
+        
         for i, line in enumerate(lines):
             # AsciiDoc headers: = Title, == Title, etc.
             # Markdown headers: # Title, ## Title, etc.
@@ -82,6 +91,7 @@ class DocumentParser:
                     content="",
                     line_start=i,
                     line_end=i,
+                    source_file=rel_source_file,
                     children=[]
                 )
                 

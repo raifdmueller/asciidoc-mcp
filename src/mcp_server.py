@@ -53,9 +53,10 @@ class MCPDocumentationServer:
         self._parse_project()
     
     def _discover_root_files(self):
-        """Find main documentation files"""
+        """Find main documentation files (AsciiDoc and Markdown only)"""
         self.root_files = []  # Clear list before discovering to prevent duplicates
-        patterns = ['*.adoc', '*.md', '*.asciidoc']
+        # Extended patterns for AsciiDoc and Markdown files
+        patterns = ['*.adoc', '*.ad', '*.asciidoc', '*.md', '*.markdown']
         for pattern in patterns:
             for file in self.project_root.glob(pattern):
                 if not file.name.startswith('_'):  # Skip includes
@@ -109,6 +110,8 @@ class MCPDocumentationServer:
                 'id': section_id,
                 'children_count': children_count,
                 'line_start': section.line_start,
+                'line_end': section.line_end,
+                'source_file': section.source_file,
                 'children': []  # Will be populated with child objects
             }
             

@@ -93,6 +93,13 @@ async def root():
                 display: none !important;
             }
 
+            .section-metadata {
+                font-size: 0.8em;
+                color: #6c757d;
+                font-family: 'Courier New', monospace;
+                margin-left: 8px;
+            }
+
             .main-container { 
                 display: flex; 
                 height: 100vh; 
@@ -308,15 +315,20 @@ async def root():
             function createSectionElement(section) {
                 const div = document.createElement('div');
                 div.className = `section level-${section.level}`;
-                
+
                 const hasChildren = section.children && section.children.length > 0;
                 const expandIcon = hasChildren ? '▶' : '•';
-                
+
+                // Format metadata display
+                const metadata = section.source_file
+                    ? `<span class="section-metadata">[${section.source_file}:${section.line_start}-${section.line_end}]</span>`
+                    : '';
+
                 const titleDiv = document.createElement('div');
                 titleDiv.className = 'section-title';
                 titleDiv.innerHTML = `
                     <span class="expand-icon">${expandIcon}</span>
-                    <span>${section.title} (${section.children_count || 0})</span>
+                    <span>${section.title} (${section.children_count || 0}) ${metadata}</span>
                 `;
                 
                 titleDiv.addEventListener('click', (e) => {
@@ -556,17 +568,20 @@ async def get_section(section_id: str):
     """Get specific section"""
     if not doc_server:
         raise HTTPException(status_code=500, detail="Server not initialized")
-    
+
     if section_id not in doc_server.sections:
         raise HTTPException(status_code=404, detail="Section not found")
-    
+
     section = doc_server.sections[section_id]
     return {
         'id': section.id,
         'title': section.title,
         'level': section.level,
         'content': section.content,
-        'children': section.children
+        'children': section.children,
+        'source_file': section.source_file,
+        'line_start': section.line_start,
+        'line_end': section.line_end
     }
 
 def init_server(project_root: Path):
