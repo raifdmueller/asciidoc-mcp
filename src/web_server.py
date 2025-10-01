@@ -251,7 +251,7 @@ async def root():
         <div class="main-container">
             <div class="left-panel" id="left-panel">
                 <div id="navigation-content">
-                    <div class="loading">Click "Load Structure" to begin</div>
+                    <div class="loading">Loading structure...</div>
                 </div>
             </div>
             
@@ -544,6 +544,11 @@ async def root():
             });
 
             clearButton.addEventListener('click', clearSearch);
+
+            // Auto-load structure when page loads
+            document.addEventListener('DOMContentLoaded', () => {
+                loadStructure();
+            });
 
             function clearSearch() {
                 searchInput.value = '';
