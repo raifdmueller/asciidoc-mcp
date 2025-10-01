@@ -419,9 +419,9 @@ async def root():
                 const hasChildren = section.children && section.children.length > 0;
                 const expandIcon = hasChildren ? '▶' : '•';
 
-                // Format metadata display
-                const metadata = section.source_file
-                    ? `<span class="section-metadata">[${section.source_file}:${section.line_start}-${section.line_end}]</span>`
+                // Format metadata display - only line numbers (file context is already clear from parent)
+                const metadata = section.line_start !== undefined
+                    ? `<span class="section-metadata">[${section.line_start}-${section.line_end}]</span>`
                     : '';
 
                 const titleDiv = document.createElement('div');
