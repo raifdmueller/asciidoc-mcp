@@ -228,6 +228,61 @@ async def root():
                 margin-left: 0;
             }
 
+            .folder-item {
+                margin: 8px 0;
+                border: 1px solid #dee2e6;
+                border-radius: 6px;
+                background: white;
+                overflow: hidden;
+            }
+
+            .folder-title {
+                font-weight: bold;
+                cursor: pointer;
+                padding: 12px 15px;
+                display: flex;
+                align-items: center;
+                background: linear-gradient(to right, #e3f2fd, #bbdefb);
+                transition: background-color 0.2s;
+                border-bottom: 1px solid #90caf9;
+            }
+
+            .folder-title:hover {
+                background: linear-gradient(to right, #bbdefb, #90caf9);
+            }
+
+            .folder-name {
+                flex: 1;
+                font-size: 1.1em;
+                color: #1976d2;
+            }
+
+            .folder-info {
+                font-size: 0.9em;
+                color: #1976d2;
+                font-weight: normal;
+                margin-left: 10px;
+            }
+
+            .folder-content {
+                display: none;
+                padding: 10px;
+                padding-left: 20px;
+                background: #fafafa;
+            }
+
+            .folder-content.expanded {
+                display: block;
+            }
+
+            .folder-content .file-item {
+                margin: 5px 0;
+            }
+
+            .folder-content .folder-item {
+                margin: 5px 0;
+            }
+
             .CodeMirror { height: 100%; font-size: 14px; }
             
             .loading { 
@@ -343,21 +398,71 @@ async def root():
                 }
             }
             
+            function buildFolderTree(structure) {
+                const tree = {
+                    folders: {},
+                    files: []
+                };
+
+                for (const [filePath, fileData] of Object.entries(structure)) {
+                    const pathParts = fileData.path.split('/');
+
+                    if (pathParts.length === 1) {
+                        // Root-level file
+                        tree.files.push(fileData);
+                    } else {
+                        // File in subdirectory
+                        const folderName = pathParts[0];
+                        if (!tree.folders[folderName]) {
+                            tree.folders[folderName] = {
+                                name: folderName,
+                                folders: {},
+                                files: []
+                            };
+                        }
+
+                        // Handle nested folders
+                        let currentFolder = tree.folders[folderName];
+                        for (let i = 1; i < pathParts.length - 1; i++) {
+                            const subFolderName = pathParts[i];
+                            if (!currentFolder.folders[subFolderName]) {
+                                currentFolder.folders[subFolderName] = {
+                                    name: subFolderName,
+                                    folders: {},
+                                    files: []
+                                };
+                            }
+                            currentFolder = currentFolder.folders[subFolderName];
+                        }
+
+                        currentFolder.files.push(fileData);
+                    }
+                }
+
+                return tree;
+            }
+
             function displayStructure(structure) {
                 const navContent = document.getElementById('navigation-content');
                 navContent.innerHTML = '';
 
-                // Structure is now grouped by files
-                // Sort files alphabetically
-                const sortedFiles = Object.entries(structure).sort((a, b) => {
-                    return a[1].filename.localeCompare(b[1].filename);
-                });
+                const tree = buildFolderTree(structure);
 
-                // Create a file element for each root file
-                for (const [filePath, fileData] of sortedFiles) {
+                // Sort and display root-level files first
+                tree.files.sort((a, b) => a.filename.localeCompare(b.filename));
+                tree.files.forEach(fileData => {
                     const fileDiv = createFileElement(fileData);
                     navContent.appendChild(fileDiv);
-                }
+                });
+
+                // Sort and display folders
+                const sortedFolders = Object.values(tree.folders).sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                );
+                sortedFolders.forEach(folder => {
+                    const folderDiv = createFolderElement(folder);
+                    navContent.appendChild(folderDiv);
+                });
             }
 
             function createFileElement(fileData) {
@@ -410,6 +515,70 @@ async def root():
                 } else {
                     sectionsDiv.classList.add('expanded');
                     expandIcon.textContent = '▼';
+                }
+            }
+
+            function createFolderElement(folder) {
+                const div = document.createElement('div');
+                div.className = 'folder-item';
+
+                const titleDiv = document.createElement('div');
+                titleDiv.className = 'folder-title';
+
+                const fileCount = folder.files.length;
+                const subFolderCount = Object.keys(folder.folders).length;
+                const totalItems = fileCount + subFolderCount;
+
+                titleDiv.innerHTML = `
+                    <span class="expand-icon">▶</span>
+                    <span class="folder-name">📁 ${folder.name}</span>
+                    <span class="folder-info">(${totalItems} items)</span>
+                `;
+
+                titleDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFolder(folder.name, titleDiv, contentDiv);
+                });
+
+                div.appendChild(titleDiv);
+
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'folder-content';
+                contentDiv.id = `folder-content-${folder.name}`;
+
+                // Sort and add files
+                folder.files.sort((a, b) => a.filename.localeCompare(b.filename));
+                folder.files.forEach(fileData => {
+                    const fileDiv = createFileElement(fileData);
+                    contentDiv.appendChild(fileDiv);
+                });
+
+                // Sort and add subfolders
+                const sortedSubFolders = Object.values(folder.folders).sort((a, b) =>
+                    a.name.localeCompare(b.name)
+                );
+                sortedSubFolders.forEach(subFolder => {
+                    const subFolderDiv = createFolderElement(subFolder);
+                    contentDiv.appendChild(subFolderDiv);
+                });
+
+                div.appendChild(contentDiv);
+
+                return div;
+            }
+
+            function toggleFolder(folderName, titleElement, contentDiv) {
+                const expandIcon = titleElement.querySelector('.expand-icon');
+                const folderNameSpan = titleElement.querySelector('.folder-name');
+
+                if (contentDiv.classList.contains('expanded')) {
+                    contentDiv.classList.remove('expanded');
+                    expandIcon.textContent = '▶';
+                    folderNameSpan.textContent = `📁 ${folderName}`;
+                } else {
+                    contentDiv.classList.add('expanded');
+                    expandIcon.textContent = '▼';
+                    folderNameSpan.textContent = `📂 ${folderName}`;
                 }
             }
 
