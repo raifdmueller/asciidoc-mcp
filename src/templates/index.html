@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MCP Documentation Server</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📄</text></svg>">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/diff/diff.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: Arial, sans-serif; height: 100vh; overflow: hidden; }
+
+        .header {
+            height: 60px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+        }
+
+        .header h1 { margin-right: 20px; font-size: 1.5em; }
+        .header button {
+            margin-right: 10px;
+            padding: 8px 16px;
+            border: 1px solid #007acc;
+            background: white;
+            color: #007acc;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .header button:hover { background: #007acc; color: white; }
+
+        #search-input {
+            margin-right: 5px;
+            padding: 8px 12px;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            width: 250px;
+            font-size: 14px;
+        }
+        #search-input:focus {
+            outline: none;
+            border-color: #007acc;
+        }
+
+        #clear-search {
+            margin-left: -30px;
+            margin-right: 10px;
+            padding: 4px 8px;
+            border: none;
+            background: transparent;
+            color: #666;
+            cursor: pointer;
+            font-size: 18px;
+        }
+        #clear-search:hover {
+            color: #dc3545;
+            background: transparent;
+        }
+
+        .search-highlight {
+            background-color: #fff3cd !important;
+        }
+
+        .search-match {
+            font-weight: bold;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .section-metadata {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-family: 'Courier New', monospace;
+            margin-left: 8px;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+            padding-top: 60px;
+        }
+
+        .left-panel {
+            width: 40%;
+            min-width: 200px;
+            background: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .resize-handle {
+            width: 5px;
+            background: #dee2e6;
+            cursor: col-resize;
+            position: relative;
+        }
+        .resize-handle:hover { background: #007acc; }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+
+        .right-header {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            font-weight: bold;
+        }
+
+        .right-content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .section {
+            margin: 2px 0;
+            border-left: 3px solid #007acc;
+            background: white;
+            border-radius: 4px;
+        }
+        .level-1 { border-left-color: #007acc; }
+        .level-2 { border-left-color: #28a745; margin-left: 15px; }
+        .level-3 { border-left-color: #ffc107; margin-left: 30px; }
+        .level-4 { border-left-color: #dc3545; margin-left: 45px; }
+
+        .section-title {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 4px 10px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+            font-size: 0.9em;
+            line-height: 1.2;
+            white-space: nowrap;
+            overflow: hidden;
+        }
+        .section-title:hover { background-color: #e9ecef; }
+        .section-title.selected { background-color: #007acc; color: white; }
+
+        .section-title-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .expand-icon {
+            width: 20px;
+            font-family: monospace;
+            color: #666;
+            transition: transform 0.2s;
+            margin-right: 8px;
+        }
+
+        .section-children { display: none; }
+        .section-children.expanded { display: block; }
+
+        /* File-level styles */
+        .file-item {
+            margin: 4px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: white;
+            overflow: hidden;
+        }
+
+        .file-title {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(to right, #f8f9fa, #e9ecef);
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #dee2e6;
+            line-height: 1.2;
+        }
+
+        .file-title:hover {
+            background: linear-gradient(to right, #e9ecef, #dee2e6);
+        }
+
+        .file-name {
+            flex: 1;
+            font-size: 0.95em;
+            color: #495057;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-info {
+            font-size: 0.8em;
+            color: #6c757d;
+            font-weight: normal;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .file-sections {
+            display: none;
+            padding: 5px;
+            background: #f8f9fa;
+        }
+
+        .file-sections.expanded {
+            display: block;
+        }
+
+        .file-sections .section {
+            margin-left: 0;
+        }
+
+        .folder-item {
+            margin: 4px 0;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background: white;
+            overflow: hidden;
+        }
+
+        .folder-title {
+            font-weight: bold;
+            cursor: pointer;
+            padding: 6px 10px;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(to right, #e3f2fd, #bbdefb);
+            transition: background-color 0.2s;
+            border-bottom: 1px solid #90caf9;
+            line-height: 1.2;
+        }
+
+        .folder-title:hover {
+            background: linear-gradient(to right, #bbdefb, #90caf9);
+        }
+
+        .folder-name {
+            flex: 1;
+            font-size: 0.95em;
+            color: #1976d2;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .folder-info {
+            font-size: 0.8em;
+            color: #1976d2;
+            font-weight: normal;
+            margin-left: 8px;
+            white-space: nowrap;
+        }
+
+        .folder-content {
+            display: none;
+            padding: 5px;
+            padding-left: 15px;
+            background: #fafafa;
+        }
+
+        .folder-content.expanded {
+            display: block;
+        }
+
+        .folder-content .file-item {
+            margin: 3px 0;
+        }
+
+        .folder-content .folder-item {
+            margin: 3px 0;
+        }
+
+        .CodeMirror { height: 100%; font-size: 14px; }
+
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 200px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>MCP Documentation Server</h1>
+        <button onclick="loadStructure()">Load Structure</button>
+        <button onclick="loadMetadata()">Load Metadata</button>
+        <button onclick="validateStructure()">Validate Structure</button>
+        <input type="text" id="search-input" placeholder="Search sections..." />
+        <button id="clear-search" style="display: none;">×</button>
+    </div>
+
+    <div class="main-container">
+        <div class="left-panel" id="left-panel">
+            <div id="navigation-content">
+                <div class="loading">Loading structure...</div>
+            </div>
+        </div>
+
+        <div class="resize-handle" id="resize-handle"></div>
+
+        <div class="right-panel">
+            <div class="right-header">Section Content</div>
+            <div class="right-content" id="right-content">
+                <div class="loading">Select a section to view content</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentEditor = null;
+        let selectedSection = null;
+
+        // Resize functionality
+        const leftPanel = document.getElementById('left-panel');
+        const resizeHandle = document.getElementById('resize-handle');
+        let isResizing = false;
+
+        // Load saved position from cookie
+        const savedWidth = getCookie('panelWidth');
+        if (savedWidth) {
+            leftPanel.style.width = savedWidth + '%';
+        }
+
+        resizeHandle.addEventListener('mousedown', (e) => {
+            isResizing = true;
+            document.addEventListener('mousemove', handleResize);
+            document.addEventListener('mouseup', stopResize);
+            e.preventDefault();
+        });
+
+        function handleResize(e) {
+            if (!isResizing) return;
+            const containerWidth = document.querySelector('.main-container').offsetWidth;
+            const newWidth = (e.clientX / containerWidth) * 100;
+            if (newWidth > 20 && newWidth < 80) {
+                leftPanel.style.width = newWidth + '%';
+                setCookie('panelWidth', newWidth, 365);
+            }
+        }
+
+        function stopResize() {
+            isResizing = false;
+            document.removeEventListener('mousemove', handleResize);
+            document.removeEventListener('mouseup', stopResize);
+        }
+
+        async function loadStructure() {
+            const navContent = document.getElementById('navigation-content');
+            navContent.innerHTML = '<div class="loading">Loading structure...</div>';
+
+            try {
+                const response = await fetch('/api/structure');
+                const data = await response.json();
+                displayStructure(data);
+            } catch (error) {
+                navContent.innerHTML = '<div class="loading">Error loading structure</div>';
+            }
+        }
+
+        async function loadMetadata() {
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = '<div class="loading">Loading metadata...</div>';
+
+            try {
+                const response = await fetch('/api/metadata');
+                const data = await response.json();
+                rightContent.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                rightContent.innerHTML = '<div class="loading">Error loading metadata</div>';
+            }
+        }
+
+        async function validateStructure() {
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = '<div class="loading">Validating structure...</div>';
+
+            try {
+                const response = await fetch('/api/validate');
+                const data = await response.json();
+                rightContent.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } catch (error) {
+                rightContent.innerHTML = '<div class="loading">Error validating structure</div>';
+            }
+        }
+
+        function buildFolderTree(structure) {
+            const tree = {
+                folders: {},
+                files: []
+            };
+
+            for (const [filePath, fileData] of Object.entries(structure)) {
+                const pathParts = fileData.path.split('/');
+
+                if (pathParts.length === 1) {
+                    // Root-level file
+                    tree.files.push(fileData);
+                } else {
+                    // File in subdirectory
+                    const folderName = pathParts[0];
+                    if (!tree.folders[folderName]) {
+                        tree.folders[folderName] = {
+                            name: folderName,
+                            folders: {},
+                            files: []
+                        };
+                    }
+
+                    // Handle nested folders
+                    let currentFolder = tree.folders[folderName];
+                    for (let i = 1; i < pathParts.length - 1; i++) {
+                        const subFolderName = pathParts[i];
+                        if (!currentFolder.folders[subFolderName]) {
+                            currentFolder.folders[subFolderName] = {
+                                name: subFolderName,
+                                folders: {},
+                                files: []
+                            };
+                        }
+                        currentFolder = currentFolder.folders[subFolderName];
+                    }
+
+                    currentFolder.files.push(fileData);
+                }
+            }
+
+            return tree;
+        }
+
+        function displayStructure(structure) {
+            const navContent = document.getElementById('navigation-content');
+            navContent.innerHTML = '';
+
+            const tree = buildFolderTree(structure);
+
+            // Sort and display root-level files first
+            tree.files.sort((a, b) => a.filename.localeCompare(b.filename));
+            tree.files.forEach(fileData => {
+                const fileDiv = createFileElement(fileData);
+                navContent.appendChild(fileDiv);
+            });
+
+            // Sort and display folders
+            const sortedFolders = Object.values(tree.folders).sort((a, b) =>
+                a.name.localeCompare(b.name)
+            );
+            sortedFolders.forEach(folder => {
+                const folderDiv = createFolderElement(folder);
+                navContent.appendChild(folderDiv);
+            });
+        }
+
+        function createFileElement(fileData) {
+            const div = document.createElement('div');
+            div.className = 'file-item';
+
+            const hasSections = fileData.sections && fileData.sections.length > 0;
+            const expandIcon = hasSections ? '▶' : '📄';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'file-title';
+            titleDiv.title = `${fileData.path} (${fileData.section_count} sections)`;
+            titleDiv.innerHTML = `
+                <span class="expand-icon">${expandIcon}</span>
+                <span class="file-name">📄 ${fileData.filename}</span>
+                <span class="file-info">(${fileData.section_count} sections)</span>
+            `;
+
+            if (hasSections) {
+                titleDiv.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    toggleFile(fileData.path, titleDiv);
+                });
+            }
+
+            div.appendChild(titleDiv);
+
+            if (hasSections) {
+                const sectionsDiv = document.createElement('div');
+                sectionsDiv.className = 'file-sections';
+                sectionsDiv.id = `file-sections-${fileData.path}`;
+
+                fileData.sections.forEach(section => {
+                    const sectionElement = createSectionElement(section);
+                    sectionsDiv.appendChild(sectionElement);
+                });
+
+                div.appendChild(sectionsDiv);
+            }
+
+            return div;
+        }
+
+        function toggleFile(filePath, titleElement) {
+            const sectionsDiv = document.getElementById(`file-sections-${filePath}`);
+            const expandIcon = titleElement.querySelector('.expand-icon');
+
+            if (sectionsDiv.classList.contains('expanded')) {
+                sectionsDiv.classList.remove('expanded');
+                expandIcon.textContent = '▶';
+            } else {
+                sectionsDiv.classList.add('expanded');
+                expandIcon.textContent = '▼';
+            }
+        }
+
+        function createFolderElement(folder) {
+            const div = document.createElement('div');
+            div.className = 'folder-item';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'folder-title';
+
+            const fileCount = folder.files.length;
+            const subFolderCount = Object.keys(folder.folders).length;
+            const totalItems = fileCount + subFolderCount;
+
+            titleDiv.title = `${folder.name}/ (${fileCount} files, ${subFolderCount} folders)`;
+            titleDiv.innerHTML = `
+                <span class="expand-icon">▶</span>
+                <span class="folder-name">📁 ${folder.name}</span>
+                <span class="folder-info">(${totalItems} items)</span>
+            `;
+
+            titleDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleFolder(folder.name, titleDiv, contentDiv);
+            });
+
+            div.appendChild(titleDiv);
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'folder-content';
+            contentDiv.id = `folder-content-${folder.name}`;
+
+            // Sort and add files
+            folder.files.sort((a, b) => a.filename.localeCompare(b.filename));
+            folder.files.forEach(fileData => {
+                const fileDiv = createFileElement(fileData);
+                contentDiv.appendChild(fileDiv);
+            });
+
+            // Sort and add subfolders
+            const sortedSubFolders = Object.values(folder.folders).sort((a, b) =>
+                a.name.localeCompare(b.name)
+            );
+            sortedSubFolders.forEach(subFolder => {
+                const subFolderDiv = createFolderElement(subFolder);
+                contentDiv.appendChild(subFolderDiv);
+            });
+
+            div.appendChild(contentDiv);
+
+            return div;
+        }
+
+        function toggleFolder(folderName, titleElement, contentDiv) {
+            const expandIcon = titleElement.querySelector('.expand-icon');
+            const folderNameSpan = titleElement.querySelector('.folder-name');
+
+            if (contentDiv.classList.contains('expanded')) {
+                contentDiv.classList.remove('expanded');
+                expandIcon.textContent = '▶';
+                folderNameSpan.textContent = `📁 ${folderName}`;
+            } else {
+                contentDiv.classList.add('expanded');
+                expandIcon.textContent = '▼';
+                folderNameSpan.textContent = `📂 ${folderName}`;
+            }
+        }
+
+        function createSectionElement(section) {
+            const div = document.createElement('div');
+            div.className = `section level-${section.level}`;
+
+            const hasChildren = section.children && section.children.length > 0;
+            const expandIcon = hasChildren ? '▶' : '•';
+
+            // Format metadata display - only line numbers (file context is already clear from parent)
+            const metadata = section.line_start !== undefined
+                ? `<span class="section-metadata">[${section.line_start}-${section.line_end}]</span>`
+                : '';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'section-title';
+            const lineInfo = section.line_start !== undefined ? ` [lines ${section.line_start}-${section.line_end}]` : '';
+            titleDiv.title = `${section.title}${lineInfo} (${section.children_count || 0} subsections)`;
+            titleDiv.innerHTML = `
+                <span class="expand-icon">${expandIcon}</span>
+                <span class="section-title-text">${section.title} (${section.children_count || 0}) ${metadata}</span>
+            `;
+
+            titleDiv.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (hasChildren) {
+                    toggleSection(section.id, titleDiv);
+                }
+                selectSection(section.id, titleDiv);
+            });
+
+            div.appendChild(titleDiv);
+
+            if (hasChildren) {
+                const childrenDiv = document.createElement('div');
+                childrenDiv.className = 'section-children';
+                childrenDiv.id = `children-${section.id}`;
+
+                section.children.forEach(child => {
+                    const childElement = createSectionElement(child);
+                    childrenDiv.appendChild(childElement);
+                });
+
+                div.appendChild(childrenDiv);
+            }
+
+            return div;
+        }
+
+        function toggleSection(sectionId, titleElement) {
+            const childrenDiv = document.getElementById(`children-${sectionId}`);
+            const expandIcon = titleElement.querySelector('.expand-icon');
+
+            if (childrenDiv.classList.contains('expanded')) {
+                childrenDiv.classList.remove('expanded');
+                expandIcon.textContent = '▶';
+            } else {
+                childrenDiv.classList.add('expanded');
+                expandIcon.textContent = '▼';
+            }
+        }
+
+        function selectSection(sectionId, titleElement) {
+            // Remove previous selection
+            if (selectedSection) {
+                selectedSection.classList.remove('selected');
+            }
+
+            // Add new selection
+            titleElement.classList.add('selected');
+            selectedSection = titleElement;
+
+            // Load content
+            loadSectionContent(sectionId);
+        }
+
+        async function loadSectionContent(sectionId) {
+            const rightContent = document.getElementById('right-content');
+            rightContent.innerHTML = '<div class="loading">Loading content...</div>';
+
+            try {
+                const response = await fetch(`/api/section/${sectionId}`);
+                const data = await response.json();
+
+                // Clean up existing CodeMirror instance BEFORE clearing DOM
+                if (currentEditor && typeof currentEditor.toTextArea === 'function') {
+                    currentEditor.toTextArea();
+                }
+
+                // Now it's safe to clear the DOM
+                rightContent.innerHTML = '';
+
+                currentEditor = CodeMirror(rightContent, {
+                    value: data.content || 'No content available',
+                    mode: 'text/plain',
+                    readOnly: true,
+                    lineNumbers: true,
+                    lineWrapping: true,
+                    theme: 'default'
+                });
+
+            } catch (error) {
+                console.error('Error loading section content:', error);
+                rightContent.innerHTML = '<div class="loading">Error loading content</div>';
+            }
+        }
+
+        // Search functionality
+        let searchDebounceTimer = null;
+        const searchInput = document.getElementById('search-input');
+        const clearButton = document.getElementById('clear-search');
+
+        // Event listeners for search
+        searchInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Escape') {
+                clearSearch();
+                return;
+            }
+
+            const searchTerm = searchInput.value.trim();
+
+            // Show/hide clear button
+            if (searchTerm) {
+                clearButton.style.display = 'inline-block';
+            } else {
+                clearButton.style.display = 'none';
+            }
+
+            // Debounced filtering
+            clearTimeout(searchDebounceTimer);
+            searchDebounceTimer = setTimeout(() => {
+                filterSections(searchTerm);
+            }, 300);
+        });
+
+        clearButton.addEventListener('click', clearSearch);
+
+        // Auto-load structure when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStructure();
+        });
+
+        function clearSearch() {
+            searchInput.value = '';
+            clearButton.style.display = 'none';
+            filterSections('');
+        }
+
+        function filterSections(searchTerm) {
+            const navContent = document.getElementById('navigation-content');
+            const allSections = navContent.querySelectorAll('.section');
+
+            if (!searchTerm) {
+                // Show all sections, remove highlights
+                allSections.forEach(section => {
+                    section.classList.remove('hidden', 'search-highlight', 'search-match');
+                });
+                return;
+            }
+
+            const lowerSearchTerm = searchTerm.toLowerCase();
+
+            // Process each section
+            allSections.forEach(section => {
+                const shouldShow = isMatchOrHasMatchingChild(section, lowerSearchTerm);
+
+                if (shouldShow) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
+                }
+            });
+        }
+
+        function isMatchOrHasMatchingChild(sectionElement, searchTerm) {
+            // Get section title text
+            const titleElement = sectionElement.querySelector('.section-title span:last-child');
+            if (!titleElement) return false;
+
+            const titleText = titleElement.textContent.toLowerCase();
+            const isMatch = titleText.includes(searchTerm);
+
+            // Apply highlight if match
+            if (isMatch) {
+                sectionElement.classList.add('search-highlight');
+                titleElement.classList.add('search-match');
+            } else {
+                sectionElement.classList.remove('search-highlight');
+                titleElement.classList.remove('search-match');
+            }
+
+            // Check if any child matches (recursive)
+            const childrenContainer = sectionElement.querySelector('.section-children');
+            if (childrenContainer) {
+                const childSections = Array.from(childrenContainer.children);
+                const hasMatchingChild = childSections.some(child =>
+                    isMatchOrHasMatchingChild(child, searchTerm)
+                );
+
+                return isMatch || hasMatchingChild;
+            }
+
+            return isMatch;
+        }
+
+        // Cookie functions
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
+            document.cookie = name + '=' + value + ';expires=' + expires.toUTCString() + ';path=/';
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + '=';
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+    </script>
+</body>
+</html>
