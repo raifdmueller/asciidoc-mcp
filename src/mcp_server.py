@@ -85,8 +85,70 @@ class MCPDocumentationServer:
 
     # ============================================================================
     # DocumentAPI and WebserverManager methods have been extracted to modules
-    # Access via self.doc_api.* and self.webserver.*
+    # Delegation methods below provide backward compatibility
     # ============================================================================
+
+    # DocumentAPI delegation methods
+    def get_structure(self, max_depth: int = 3):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_structure(max_depth)
+
+    def get_main_chapters(self):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_main_chapters()
+
+    def get_root_files_structure(self):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_root_files_structure()
+
+    def get_section(self, path: str):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_section(path)
+
+    def get_sections(self, level: int):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_sections(level)
+
+    def get_sections_by_level(self, level: int):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_sections_by_level(level)
+
+    def search_content(self, query: str):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.search_content(query)
+
+    def get_metadata(self, path: str = None):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_metadata(path)
+
+    def get_dependencies(self):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.get_dependencies()
+
+    def validate_structure(self):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.validate_structure()
+
+    def refresh_index(self):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.refresh_index()
+
+    def update_section_content(self, path: str, content: str):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.update_section_content(path, content)
+
+    def insert_section(self, parent_path: str, title: str, content: str, position: str = "append"):
+        """Delegate to DocumentAPI"""
+        return self.doc_api.insert_section(parent_path, title, content, position)
+
+    # WebserverManager delegation methods
+    def get_webserver_status(self):
+        """Delegate to WebserverManager"""
+        return self.webserver.get_webserver_status()
+
+    def restart_webserver(self):
+        """Delegate to WebserverManager"""
+        return self.webserver.restart_webserver()
 
 
 def main():
