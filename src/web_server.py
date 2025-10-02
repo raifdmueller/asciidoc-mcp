@@ -144,27 +144,38 @@ async def root():
                 overflow-y: auto; 
             }
             
-            .section { 
-                margin: 5px 0; 
-                border-left: 3px solid #007acc; 
-                background: white; 
-                border-radius: 4px; 
+            .section {
+                margin: 2px 0;
+                border-left: 3px solid #007acc;
+                background: white;
+                border-radius: 4px;
             }
             .level-1 { border-left-color: #007acc; }
             .level-2 { border-left-color: #28a745; margin-left: 15px; }
             .level-3 { border-left-color: #ffc107; margin-left: 30px; }
             .level-4 { border-left-color: #dc3545; margin-left: 45px; }
-            
-            .section-title { 
-                font-weight: bold; 
-                cursor: pointer; 
-                padding: 10px 15px; 
-                display: flex; 
-                align-items: center; 
-                transition: background-color 0.2s; 
+
+            .section-title {
+                font-weight: bold;
+                cursor: pointer;
+                padding: 4px 10px;
+                display: flex;
+                align-items: center;
+                transition: background-color 0.2s;
+                font-size: 0.9em;
+                line-height: 1.2;
+                white-space: nowrap;
+                overflow: hidden;
             }
             .section-title:hover { background-color: #e9ecef; }
             .section-title.selected { background-color: #007acc; color: white; }
+
+            .section-title-text {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
             
             .expand-icon { 
                 width: 20px; 
@@ -179,7 +190,7 @@ async def root():
 
             /* File-level styles */
             .file-item {
-                margin: 10px 0;
+                margin: 4px 0;
                 border: 1px solid #dee2e6;
                 border-radius: 6px;
                 background: white;
@@ -189,12 +200,13 @@ async def root():
             .file-title {
                 font-weight: bold;
                 cursor: pointer;
-                padding: 12px 15px;
+                padding: 6px 10px;
                 display: flex;
                 align-items: center;
                 background: linear-gradient(to right, #f8f9fa, #e9ecef);
                 transition: background-color 0.2s;
                 border-bottom: 1px solid #dee2e6;
+                line-height: 1.2;
             }
 
             .file-title:hover {
@@ -203,20 +215,24 @@ async def root():
 
             .file-name {
                 flex: 1;
-                font-size: 1.1em;
+                font-size: 0.95em;
                 color: #495057;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .file-info {
-                font-size: 0.9em;
+                font-size: 0.8em;
                 color: #6c757d;
                 font-weight: normal;
-                margin-left: 10px;
+                margin-left: 8px;
+                white-space: nowrap;
             }
 
             .file-sections {
                 display: none;
-                padding: 10px;
+                padding: 5px;
                 background: #f8f9fa;
             }
 
@@ -229,7 +245,7 @@ async def root():
             }
 
             .folder-item {
-                margin: 8px 0;
+                margin: 4px 0;
                 border: 1px solid #dee2e6;
                 border-radius: 6px;
                 background: white;
@@ -239,12 +255,13 @@ async def root():
             .folder-title {
                 font-weight: bold;
                 cursor: pointer;
-                padding: 12px 15px;
+                padding: 6px 10px;
                 display: flex;
                 align-items: center;
                 background: linear-gradient(to right, #e3f2fd, #bbdefb);
                 transition: background-color 0.2s;
                 border-bottom: 1px solid #90caf9;
+                line-height: 1.2;
             }
 
             .folder-title:hover {
@@ -253,21 +270,25 @@ async def root():
 
             .folder-name {
                 flex: 1;
-                font-size: 1.1em;
+                font-size: 0.95em;
                 color: #1976d2;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .folder-info {
-                font-size: 0.9em;
+                font-size: 0.8em;
                 color: #1976d2;
                 font-weight: normal;
-                margin-left: 10px;
+                margin-left: 8px;
+                white-space: nowrap;
             }
 
             .folder-content {
                 display: none;
-                padding: 10px;
-                padding-left: 20px;
+                padding: 5px;
+                padding-left: 15px;
                 background: #fafafa;
             }
 
@@ -276,11 +297,11 @@ async def root():
             }
 
             .folder-content .file-item {
-                margin: 5px 0;
+                margin: 3px 0;
             }
 
             .folder-content .folder-item {
-                margin: 5px 0;
+                margin: 3px 0;
             }
 
             .CodeMirror { height: 100%; font-size: 14px; }
@@ -474,6 +495,7 @@ async def root():
 
                 const titleDiv = document.createElement('div');
                 titleDiv.className = 'file-title';
+                titleDiv.title = `${fileData.path} (${fileData.section_count} sections)`;
                 titleDiv.innerHTML = `
                     <span class="expand-icon">${expandIcon}</span>
                     <span class="file-name">📄 ${fileData.filename}</span>
@@ -529,6 +551,7 @@ async def root():
                 const subFolderCount = Object.keys(folder.folders).length;
                 const totalItems = fileCount + subFolderCount;
 
+                titleDiv.title = `${folder.name}/ (${fileCount} files, ${subFolderCount} folders)`;
                 titleDiv.innerHTML = `
                     <span class="expand-icon">▶</span>
                     <span class="folder-name">📁 ${folder.name}</span>
@@ -596,11 +619,13 @@ async def root():
 
                 const titleDiv = document.createElement('div');
                 titleDiv.className = 'section-title';
+                const lineInfo = section.line_start !== undefined ? ` [lines ${section.line_start}-${section.line_end}]` : '';
+                titleDiv.title = `${section.title}${lineInfo} (${section.children_count || 0} subsections)`;
                 titleDiv.innerHTML = `
                     <span class="expand-icon">${expandIcon}</span>
-                    <span>${section.title} (${section.children_count || 0}) ${metadata}</span>
+                    <span class="section-title-text">${section.title} (${section.children_count || 0}) ${metadata}</span>
                 `;
-                
+
                 titleDiv.addEventListener('click', (e) => {
                     e.stopPropagation();
                     if (hasChildren) {
@@ -608,7 +633,7 @@ async def root():
                     }
                     selectSection(section.id, titleDiv);
                 });
-                
+
                 div.appendChild(titleDiv);
                 
                 if (hasChildren) {
