@@ -36,9 +36,6 @@ jobs:
       - name: Install docToolchain
         run: ./dtcw local install doctoolchain
 
-      - name: Generate HTML documentation
-        run: ./dtcw generateHTML
-
       - name: Generate site
         run: ./dtcw generateSite
 
