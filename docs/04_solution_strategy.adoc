@@ -2,6 +2,106 @@
 
 This chapter outlines the fundamental architectural decisions and strategies to meet the requirements defined in the previous chapters.
 
+> **Note:** This chapter has been updated (Oct 2025) to reflect the actual implemented system and document the **mental model** (nach Peter Naur) that guided development - not just what was built, but *why* it makes sense.
+
+=== 4.0 Mental Model: The Core Insight
+
+Following Peter Naur's theory that "programming is theory building," we document here the fundamental mental model that makes this architecture coherent and maintainable.
+
+==== The Central Problem: Cognitive Mismatch
+
+The core insight driving this architecture is recognizing a fundamental mismatch:
+
+**LLMs think in** → Hierarchical concepts, semantic structure, logical relationships
+**Files exist as** → Linear text, physical boundaries, arbitrary splits
+
+Traditional file-based access forces LLMs to:
+1. Load entire files (wasting tokens on irrelevant content)
+2. Parse structure repeatedly (expensive, error-prone)
+3. Navigate via file paths (physical structure ≠ logical structure)
+
+**Mental Model:** *"The document is a logical tree, not a collection of text files."*
+
+This single insight explains most architectural decisions:
+- Why in-memory index? → Parse the logical tree once, query it many times
+- Why file-system-as-truth? → Preserve human editability, Git workflows
+- Why custom parser? → Off-the-shelf tools think in "files," we need "logical sections"
+- Why modular architecture? → Each module = one cognitive context
+
+==== Design Philosophy: Simplicity Through Separation
+
+The architecture separates three concerns that are often conflated:
+
+1. **Logical Structure** (what the document *means*)
+   - Chapters, sections, hierarchy
+   - Handled by: DocumentParser, Structure Index
+
+2. **Physical Storage** (where content *lives*)
+   - Files, includes, line numbers
+   - Handled by: File System, ContentEditor
+
+3. **Access Protocol** (how clients *interact*)
+   - MCP tools, JSON-RPC, HTTP
+   - Handled by: ProtocolHandler, WebServer
+
+**Mental Model:** *"Logical ≠ Physical ≠ Protocol"*
+
+This separation enables:
+- Users think in documents (logical)
+- Developers edit files (physical)
+- LLMs query via MCP (protocol)
+
+Each dimension can evolve independently.
+
+==== Key Assumptions (Mental Model Foundation)
+
+Understanding the architecture requires understanding its assumptions:
+
+1. **"Read-heavy workload"** (90% reads, 10% writes)
+   - Justifies: In-memory index, parse-once strategy
+   - If false: Would need different caching strategy
+
+2. **"Project size is bounded"** (~600 pages max)
+   - Justifies: In-memory approach, no pagination needed
+   - If false: Would need streaming/chunking architecture
+
+3. **"Humans are co-editors"** (not just LLMs)
+   - Justifies: File-system-as-truth, human-readable formats
+   - If false: Could use binary/database storage
+
+4. **"Clarity > Performance"** (within reason)
+   - Justifies: Modular split even with delegation overhead
+   - If false: Would keep monolithic structure
+
+5. **"One concern = One module"** (cognitive load management)
+   - Justifies: <500 lines per file, focused responsibilities
+   - If false: Could have larger, more tightly coupled modules
+
+These assumptions form the "theory" (Naur) that makes the code comprehensible.
+
+==== Why This Architecture Makes Sense
+
+The architecture can be understood as solving three nested problems:
+
+**Problem 1: Token Efficiency** (innermost)
+→ Solution: In-memory index enables precise content location
+→ Mental Model: "Know where to look before you look"
+
+**Problem 2: Human Compatibility** (middle)
+→ Solution: File-system-as-truth preserves editability
+→ Mental Model: "The file is the document, not a cache"
+
+**Problem 3: Maintainability** (outermost)
+→ Solution: Modular architecture with clear boundaries
+→ Mental Model: "Each module = one mental context"
+
+This nesting explains why certain decisions depend on others:
+- Can't have modular architecture without clear concerns separation
+- Can't have in-memory index without understanding read-heavy workload
+- Can't have file-based approach without human co-editing requirement
+
+The architecture is not just a collection of decisions - it's a coherent *theory* about how to bridge the gap between LLM needs and human workflows.
+
 === 4.1 Core Architectural Approach: In-Memory Index with File-System-as-Truth
 
 The core of the architecture is a dual approach:
