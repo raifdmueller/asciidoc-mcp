@@ -230,9 +230,56 @@
 <div class="container-fluid td-outer">
     <div class="td-main">
         <!-- Landing Page for MCP Documentation Server -->
+<!-- Custom styles for better visual appearance -->
+<style>
+    /* Fix button contrast on dark background */
+    .td-box--1 .btn-primary {
+        background-color: #ffffff;
+        border-color: #ffffff;
+        color: #2C5F8D;
+        font-weight: 600;
+    }
+    .td-box--1 .btn-primary:hover {
+        background-color: #f0f0f0;
+        border-color: #f0f0f0;
+        color: #1a3a52;
+    }
+    .td-box--1 .btn-secondary {
+        background-color: #FFA500;
+        border-color: #FFA500;
+        color: #ffffff;
+        font-weight: 600;
+    }
+    .td-box--1 .btn-secondary:hover {
+        background-color: #FF8C00;
+        border-color: #FF8C00;
+    }
+    /* Add spacing between sections */
+    .td-box {
+        padding-top: 4rem !important;
+        padding-bottom: 4rem !important;
+    }
+    /* Fix hero title spacing from menu */
+    .td-box--1 {
+        padding-top: 8rem !important;
+    }
+    /* Better code block styling */
+    .td-box pre {
+        margin: 1rem 0;
+    }
+    /* Card shadows for depth */
+    .card {
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: box-shadow 0.3s ease;
+    }
+    .card:hover {
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+    }
+</style>
+
 <section class="row td-box td-box--1 position-relative td-box--gradient td-box--height-auto">
     <div class="container text-center td-arrow-down">
-        <span class="h1">MCP Documentation Server</span>
+        <span class="h1 mb-4">MCP Documentation Server</span>
         <span class="h3 d-block mt-3">Efficient LLM Interaction with Large Documentation Projects</span>
         <div class="pt-3 lead">
             A Model Context Protocol (MCP) server designed to help Large Language Models navigate and interact
@@ -240,18 +287,18 @@
         </div>
 
         <!-- Badges -->
-        <div class="pt-3">
-            <img src="https://img.shields.io/github/stars/raifdmueller/asciidoc-mcp?style=social" alt="GitHub stars" class="me-2">
-            <img src="https://img.shields.io/github/license/raifdmueller/asciidoc-mcp" alt="License" class="me-2">
-            <img src="https://img.shields.io/badge/coverage-82%25-brightgreen" alt="Coverage" class="me-2">
-            <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+" class="me-2">
+        <div class="pt-4 pb-2">
+            <img src="https://img.shields.io/github/stars/raifdmueller/asciidoc-mcp?style=social" alt="GitHub stars" class="me-2 mb-2">
+            <img src="https://img.shields.io/badge/license-MIT-blue" alt="License MIT" class="me-2 mb-2">
+            <img src="https://img.shields.io/badge/coverage-82%25-brightgreen" alt="Coverage 82%" class="me-2 mb-2">
+            <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+" class="me-2 mb-2">
         </div>
 
-        <div class="pt-4 pb-5">
-            <a class="btn btn-lg btn-primary me-3 mb-2" href="https://github.com/raifdmueller/asciidoc-mcp">
+        <div class="pt-4 pb-3">
+            <a class="btn btn-lg btn-primary me-3 mb-3" href="https://github.com/raifdmueller/asciidoc-mcp">
                 <i class="fab fa-github"></i> View on GitHub
             </a>
-            <a class="btn btn-lg btn-secondary mb-2" href="arc42-template.html">
+            <a class="btn btn-lg btn-secondary mb-3" href="arc42-template.html">
                 <i class="fas fa-book"></i> Read Documentation
             </a>
         </div>
@@ -356,6 +403,35 @@ pip install -r requirements.txt</code></pre>
     <div class="container">
         <div class="row">
             <div class="col-md-12">
+                <h2 class="text-center mb-5">See It In Action</h2>
+            </div>
+        </div>
+        <div class="row justify-content-center mb-5">
+            <div class="col-md-10">
+                <div class="card">
+                    <div class="card-body text-center p-4">
+                        <p class="lead mb-3">
+                            <i class="fas fa-globe text-primary me-2"></i>
+                            The MCP server includes an optional web interface for visual navigation
+                        </p>
+                        <div class="bg-light p-3 rounded">
+                            <p class="mb-2"><strong>Enable with:</strong></p>
+                            <code class="text-dark">ENABLE_WEBSERVER=true</code>
+                        </div>
+                        <p class="text-muted small mt-3">
+                            Web interface auto-launches and provides a visual overview of your documentation structure
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row td-box td-box--5 position-relative td-box--gradient td-box--height-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
                 <h2 class="text-center mb-5">Who Benefits?</h2>
             </div>
         </div>
@@ -412,7 +488,7 @@ pip install -r requirements.txt</code></pre>
     </div>
 </section>
 
-<section class="row td-box td-box--5 position-relative td-box--gradient td-box--height-auto">
+<section class="row td-box td-box--6 position-relative td-box--gradient td-box--height-auto">
     <div class="container">
         <div class="row">
             <div class="col-md-12">
@@ -450,7 +526,7 @@ pip install -r requirements.txt</code></pre>
     </div>
 </section>
 
-<section class="row td-box td-box--6 position-relative td-box--gradient td-box--height-auto">
+<section class="row td-box td-box--7 position-relative td-box--gradient td-box--height-auto">
     <div class="container text-center">
         <h2 class="mb-4">Open Source</h2>
         <p class="lead">
