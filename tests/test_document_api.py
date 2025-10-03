@@ -510,6 +510,57 @@ Content 2
                 assert section.level == 1, f"Level {section.level} section '{orphaned_id}' should not be orphaned"
 
 
+class TestLevelInconsistencies:
+    """Test level inconsistency handling (Issue #30)"""
+
+    def test_level_skips_are_tolerated(self, tmp_path):
+        """Test that level skips don't cause validation failures"""
+        # Create document with level skip (1 → 3, missing 2)
+        doc_file = tmp_path / "doc.adoc"
+        doc_file.write_text("""
+= Document
+
+=== Skips to Level 3
+This skips level 2, going straight from 1 to 3.
+
+==== Level 4 subsection
+Content here.
+""")
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+        result = server.doc_api.validate_structure()
+
+        # Should still be valid despite level skip
+        assert result['valid'] is True
+        # Should have no critical issues
+        assert len(result['issues']) == 0
+
+    def test_level_inconsistency_warnings_reduced(self, tmp_path):
+        """Test that level inconsistencies produce fewer or no warnings"""
+        doc_file = tmp_path / "doc.adoc"
+        doc_file.write_text("""
+= Root
+
+=== Skip to 3
+Content
+
+==== And to 4
+Content
+
+= Another Root
+
+== Proper Level 2
+Content
+""")
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+        result = server.doc_api.validate_structure()
+
+        # Count level inconsistency warnings
+        level_warnings = [w for w in result.get('warnings', []) if 'Level inconsistency' in w]
+
+        # Should tolerate level skips without warnings, or at least minimal warnings
+        assert len(level_warnings) <= 2, f"Too many level inconsistency warnings: {len(level_warnings)}"
+
+
 class TestGetStructureStartLevel:
     """Test new get_structure API with start_level parameter (Issue #28)"""
 

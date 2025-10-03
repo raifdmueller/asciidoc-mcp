@@ -354,14 +354,16 @@ class DocumentAPI:
                 if child_id not in self.server.sections:
                     issues.append(f"Missing child section: {child_id} (referenced by {section.id})")
 
-        # Check level consistency
+        # Check level consistency (tolerance mode - allow level skips)
+        # Only warn if child level is NOT greater than parent level (actual hierarchy violation)
         for section in self.server.sections.values():
             if '.' in section.id:
                 parent_id = '.'.join(section.id.split('.')[:-1])
                 if parent_id in self.server.sections:
                     parent_section = self.server.sections[parent_id]
-                    if section.level != parent_section.level + 1:
-                        warnings.append(f"Level inconsistency: {section.id} (level {section.level}) under {parent_id} (level {parent_section.level})")
+                    # Child must be deeper than parent (allow skips like 1→3, but not 3→2)
+                    if section.level <= parent_section.level:
+                        warnings.append(f"Level hierarchy violation: {section.id} (level {section.level}) should be deeper than parent {parent_id} (level {parent_section.level})")
 
         # Check for empty sections
         empty_sections = [s.id for s in self.server.sections.values() if not s.content and not s.children]
