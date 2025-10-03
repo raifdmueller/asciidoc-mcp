@@ -273,6 +273,23 @@
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
         transform: translateY(-4px);
     }
+
+    /* Fix Who Benefits section - dark background with light text */
+    .td-box--5 {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+    }
+    .td-box--5 h2, .td-box--5 h4, .td-box--5 p, .td-box--5 li {
+        color: white !important;
+    }
+
+    /* Screenshot/demo image styling */
+    .demo-screenshot {
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        max-width: 100%;
+        height: auto;
+    }
 </style>
 
 <section class="row td-box td-box--1 position-relative td-box--gradient td-box--height-auto">
@@ -412,6 +429,18 @@ pip install -r requirements.txt</code></pre>
                             <i class="fas fa-globe text-primary me-2"></i>
                             The MCP server includes an optional web interface for visual navigation
                         </p>
+
+                        <!-- Screenshot/Demo placeholder -->
+                        <div class="my-4">
+                            <div class="demo-screenshot bg-light p-5 d-flex align-items-center justify-content-center" style="min-height: 250px; border: 2px dashed #dee2e6;">
+                                <div class="text-center text-muted">
+                                    <i class="fas fa-image fa-4x mb-3"></i>
+                                    <p class="mb-0">Web Interface Preview</p>
+                                    <p class="small">Browse documentation structure visually</p>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="bg-light p-3 rounded">
                             <p class="mb-2"><strong>Enable with:</strong></p>
                             <code class="text-dark">ENABLE_WEBSERVER=true</code>
