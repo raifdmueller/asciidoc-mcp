@@ -206,7 +206,7 @@ pip install -r requirements.txt</code></pre>
 
                         <!-- Web Interface Screenshot -->
                         <div class="my-4">
-                            <img src="${content.rootpath}images/web-interface-preview.png"
+                            <img src="images/web-interface-preview.png"
                                  alt="MCP Documentation Server Web Interface showing hierarchical document navigation"
                                  class="demo-screenshot">
                         </div>
