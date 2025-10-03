@@ -1,0 +1,51 @@
+name: Deploy arc42 Documentation
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'docs/**'
+      - 'docToolchainConfig.groovy'
+      - '.github/workflows/docs.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Download dtcw wrapper
+        run: |
+          curl -Lo dtcw https://doctoolchain.org/dtcw
+          chmod +x dtcw
+
+      - name: Install docToolchain
+        run: ./dtcw local install doctoolchain
+
+      - name: Generate HTML documentation
+        run: ./dtcw generateHTML
+
+      - name: Generate site
+        run: ./dtcw generateSite
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build/microsite/output
+          publish_branch: gh-pages
+          cname: false

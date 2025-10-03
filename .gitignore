@@ -28,3 +28,8 @@ test-results.txt
 # Responsible-Vibe MCP workflow plans
 .vibe/development-plan*.md
 .vibe/development-plan-*/
+
+# docToolchain
+build/
+.gradle/
+.doctoolchain/
