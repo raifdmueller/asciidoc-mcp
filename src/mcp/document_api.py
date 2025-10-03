@@ -25,16 +25,61 @@ class DocumentAPI:
         """
         self.server = server
 
-    def get_structure(self, start_level: int = 1, parent_id: Optional[str] = None) -> Dict[str, Any]:
+    def _paginate(self, items: list, limit: Optional[int] = None, offset: int = 0) -> Dict[str, Any]:
+        """
+        Apply pagination to a list of items
+
+        Args:
+            items: List of items to paginate
+            limit: Maximum number of items to return (None or 0 = all)
+            offset: Number of items to skip
+
+        Returns:
+            Dict with 'results' and 'pagination' metadata
+        """
+        total = len(items)
+
+        # If limit is None or 0, return all items (backward compatible)
+        if limit is None or limit == 0:
+            return {
+                'results': items,
+                'pagination': {
+                    'total': total,
+                    'limit': 0,
+                    'offset': 0,
+                    'has_next': False,
+                    'has_previous': False
+                }
+            }
+
+        # Apply pagination
+        start = offset
+        end = offset + limit
+        paginated_items = items[start:end]
+
+        return {
+            'results': paginated_items,
+            'pagination': {
+                'total': total,
+                'limit': limit,
+                'offset': offset,
+                'has_next': end < total,
+                'has_previous': offset > 0
+            }
+        }
+
+    def get_structure(self, start_level: int = 1, parent_id: Optional[str] = None, limit: Optional[int] = None, offset: int = 0) -> Dict[str, Any]:
         """
         Get sections at a specific level (always depth=1 to avoid token limits)
 
         Args:
             start_level: Which hierarchy level to return (default: 1)
             parent_id: Optional filter - only return children of this section
+            limit: Maximum results to return (None/0 = all)
+            offset: Number of results to skip
 
         Returns:
-            Dict with section data for the requested level
+            Dict with section data for the requested level, or paginated response if limit specified
         """
 
         # Collect all sections at the requested level
@@ -61,12 +106,12 @@ class DocumentAPI:
 
         sorted_sections = sorted(filtered_sections, key=get_sort_key)
 
-        # Build flat structure (no hierarchy needed since we only return one level)
-        structure = {}
+        # Build section data list
+        section_list = []
         for section_id, section in sorted_sections:
             children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
 
-            structure[section_id] = {
+            section_list.append({
                 'title': section.title,
                 'level': section.level,
                 'id': section_id,
@@ -74,9 +119,14 @@ class DocumentAPI:
                 'line_start': section.line_start,
                 'line_end': section.line_end,
                 'source_file': section.source_file
-            }
+            })
 
-        return structure
+        # Return paginated if limit specified, else return dict for backward compatibility
+        if limit is not None:
+            return self._paginate(section_list, limit, offset)
+        else:
+            # Convert list back to dict for backward compatibility
+            return {item['id']: item for item in section_list}
 
     def get_main_chapters(self) -> Dict[str, Any]:
         """Get main chapters for web interface - handles arc42 structure correctly"""
@@ -211,8 +261,18 @@ class DocumentAPI:
             }
         return None
 
-    def get_sections(self, level: int) -> List[Dict[str, Any]]:
-        """Get all sections at specific level"""
+    def get_sections(self, level: int, limit: Optional[int] = None, offset: int = 0) -> Dict[str, Any]:
+        """
+        Get all sections at specific level
+
+        Args:
+            level: Section level to filter by
+            limit: Maximum results to return (None/0 = all)
+            offset: Number of results to skip
+
+        Returns:
+            Dict with 'results' list and 'pagination' metadata, or just list if limit not specified
+        """
         result = []
         for section in self.server.sections.values():
             if section.level == level:
@@ -221,10 +281,25 @@ class DocumentAPI:
                     'title': section.title,
                     'content': section.content[:200] + '...' if len(section.content) > 200 else section.content
                 })
-        return result
 
-    def search_content(self, query: str) -> List[Dict[str, Any]]:
-        """Search for content in sections"""
+        # Return paginated if limit specified, else return list for backward compatibility
+        if limit is not None:
+            return self._paginate(result, limit, offset)
+        else:
+            return result
+
+    def search_content(self, query: str, limit: Optional[int] = None, offset: int = 0) -> Dict[str, Any]:
+        """
+        Search for content in sections
+
+        Args:
+            query: Search query string
+            limit: Maximum results to return (None/0 = all, for backward compatibility)
+            offset: Number of results to skip
+
+        Returns:
+            Dict with 'results' list and 'pagination' metadata, or just list if limit not specified
+        """
         results = []
         query_lower = query.lower()
 
@@ -237,7 +312,13 @@ class DocumentAPI:
                     'snippet': self._extract_snippet(section.content, query_lower)
                 })
 
-        return sorted(results, key=lambda x: x['relevance'], reverse=True)
+        sorted_results = sorted(results, key=lambda x: x['relevance'], reverse=True)
+
+        # Return paginated if limit specified, else return list for backward compatibility
+        if limit is not None:
+            return self._paginate(sorted_results, limit, offset)
+        else:
+            return sorted_results
 
     def get_sections_by_level(self, level: int) -> List[Dict[str, Any]]:
         """Get all sections at specific level"""

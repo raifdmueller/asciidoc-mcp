@@ -89,9 +89,9 @@ class MCPDocumentationServer:
     # ============================================================================
 
     # DocumentAPI delegation methods
-    def get_structure(self, start_level: int = 1, parent_id: str = None):
+    def get_structure(self, start_level: int = 1, parent_id: str = None, limit: int = None, offset: int = 0):
         """Delegate to DocumentAPI"""
-        return self.doc_api.get_structure(start_level, parent_id)
+        return self.doc_api.get_structure(start_level, parent_id, limit, offset)
 
     def get_main_chapters(self):
         """Delegate to DocumentAPI"""
