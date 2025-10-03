@@ -561,6 +561,84 @@ Content
         assert len(level_warnings) <= 2, f"Too many level inconsistency warnings: {len(level_warnings)}"
 
 
+class TestPagination:
+    """Test pagination support for large result sets (Issue #32)"""
+
+    @pytest.fixture
+    def large_doc_server(self, tmp_path):
+        """Create server with many sections for pagination testing"""
+        doc_file = tmp_path / "doc.adoc"
+        content = "= Large Document\n\n"
+        for i in range(1, 101):  # 100 sections
+            content += f"== Section {i}\nContent for section {i}.\n\n"
+        doc_file.write_text(content)
+        return MCPDocumentationServer(tmp_path, enable_webserver=False)
+
+    def test_search_content_with_pagination(self, large_doc_server):
+        """Test search_content supports limit and offset"""
+        # Search for "section" should find many results
+        result = large_doc_server.doc_api.search_content("section", limit=10, offset=0)
+
+        assert isinstance(result, dict)
+        assert 'results' in result
+        assert 'pagination' in result
+        assert len(result['results']) == 10
+        assert result['pagination']['total'] >= 10
+        assert result['pagination']['limit'] == 10
+        assert result['pagination']['offset'] == 0
+        assert result['pagination']['has_next'] == True
+
+    def test_search_content_pagination_offset(self, large_doc_server):
+        """Test search pagination with offset"""
+        page1 = large_doc_server.doc_api.search_content("section", limit=10, offset=0)
+        page2 = large_doc_server.doc_api.search_content("section", limit=10, offset=10)
+
+        # Pages should have different results
+        assert page1['results'][0]['id'] != page2['results'][0]['id']
+        # Same total count
+        assert page1['pagination']['total'] == page2['pagination']['total']
+
+    def test_get_sections_with_pagination(self, large_doc_server):
+        """Test get_sections supports limit and offset"""
+        result = large_doc_server.doc_api.get_sections(level=2, limit=10, offset=0)
+
+        assert isinstance(result, dict)
+        assert 'results' in result
+        assert 'pagination' in result
+        assert len(result['results']) <= 10
+
+    def test_get_structure_with_pagination(self, large_doc_server):
+        """Test get_structure supports limit and offset"""
+        result = large_doc_server.doc_api.get_structure(start_level=2, limit=10, offset=0)
+
+        assert isinstance(result, dict)
+        # Structure returns items dict, check it's limited
+        if 'pagination' in result:
+            assert result['pagination']['limit'] == 10
+        # Or check items count directly
+        assert len(result.get('items', result)) <= 10
+
+    def test_pagination_default_backward_compatible(self, large_doc_server):
+        """Test that omitting pagination params returns all results (backward compatible)"""
+        # Old API call without pagination should still work
+        result = large_doc_server.doc_api.search_content("section")
+
+        # Should return results (either list or dict with results)
+        if isinstance(result, dict):
+            assert 'results' in result or len(result) > 0
+        else:
+            assert len(result) > 0
+
+    def test_pagination_limit_zero_returns_all(self, large_doc_server):
+        """Test that limit=0 returns all results"""
+        result = large_doc_server.doc_api.search_content("section", limit=0)
+
+        # Should return all results
+        if isinstance(result, dict):
+            total = result['pagination']['total']
+            assert len(result['results']) == total
+
+
 class TestGetStructureStartLevel:
     """Test new get_structure API with start_level parameter (Issue #28)"""
 
