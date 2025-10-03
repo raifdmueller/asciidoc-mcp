@@ -28,6 +28,9 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Install Graphviz for PlantUML diagrams
+        run: sudo apt-get update && sudo apt-get install -y graphviz
+
       - name: Download dtcw wrapper
         run: |
           curl -Lo dtcw https://doctoolchain.org/dtcw

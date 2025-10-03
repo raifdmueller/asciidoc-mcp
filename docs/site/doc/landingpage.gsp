@@ -89,7 +89,7 @@
                 <h4><span class="badge bg-primary">1</span> Install Dependencies</h4>
                 <pre class="bg-dark text-light p-3 rounded"><code class="language-bash"># Create virtual environment
 python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+source venv/bin/activate  # On Windows: venv\\Scripts\\activate
 
 # Install dependencies
 pip install -r requirements.txt</code></pre>
