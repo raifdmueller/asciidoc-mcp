@@ -16,3 +16,15 @@ __pycache__/
 .webserver_started
 browser_debug.log
 web_server.log
+
+# Test artifacts
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+test-report*.html
+test-results.txt
+
+# Responsible-Vibe MCP workflow plans
+.vibe/development-plan*.md
+.vibe/development-plan-*/
