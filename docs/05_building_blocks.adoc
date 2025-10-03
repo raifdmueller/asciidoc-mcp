@@ -63,3 +63,264 @@ Rel(index, parser, "Is built by")
 Rel(fs_handler, file_system, "Interacts with")
 @enduml
 ----
+
+> **Note:** The diagram above shows the initial design. Section 5.3 documents the actual implemented modular architecture (Oct 2025) based on ADR-006.
+
+=== 5.3 Modular MCP Server Architecture (Actual Implementation)
+
+Following the refactoring documented in **ADR-006**, the MCP API Server was split into focused modules to comply with the <500 lines constraint and improve maintainability. This section describes the **actual implemented architecture** as of October 2025.
+
+==== Architectural Overview
+
+The MCP Server follows an **Extract-and-Delegate pattern** with **Dependency Injection**:
+
+[plantuml, modular-architecture, svg]
+----
+@startuml
+!include <C4/C4_Component>
+LAYOUT_WITH_LEGEND()
+
+title Modular MCP Server Architecture (Actual Implementation)
+
+Container_Boundary(server, "MCP Documentation Server") {
+    Component(orchestrator, "MCPDocumentationServer", "mcp_server.py (202 lines)", "Thin orchestrator with dependency injection")
+    Component(doc_api, "DocumentAPI", "document_api.py (435 lines)", "All document operations")
+    Component(protocol, "ProtocolHandler", "protocol_handler.py (279 lines)", "MCP JSON-RPC protocol")
+    Component(webserver_mgr, "WebserverManager", "webserver_manager.py (121 lines)", "Web server lifecycle")
+    Component(parser, "DocumentParser", "document_parser.py", "AsciiDoc/Markdown parsing")
+    Component(editor, "ContentEditor", "content_editor.py", "File modification")
+    Component(watcher, "FileWatcher", "file_watcher.py", "File system monitoring")
+}
+
+Rel(orchestrator, doc_api, "delegates to", "get_structure(), search(), etc.")
+Rel(orchestrator, protocol, "uses for", "MCP request handling")
+Rel(orchestrator, webserver_mgr, "manages", "web server lifecycle")
+Rel(orchestrator, parser, "initializes", "at startup")
+Rel(orchestrator, editor, "provides to", "content modifications")
+Rel(orchestrator, watcher, "starts", "for auto-refresh")
+
+Rel(doc_api, orchestrator, "accesses state via", "self.server.sections")
+Rel(protocol, doc_api, "routes tools to", "tool implementations")
+Rel(webserver_mgr, orchestrator, "accesses", "server instance")
+@enduml
+----
+
+==== Module Responsibilities
+
+[cols="1,2,2,1"]
+|===
+| Module | Responsibility | Key Methods | Lines
+
+| **mcp_server.py**
+| Server orchestration, initialization, delegation
+| `__init__()`, `cleanup()`, delegation methods
+| 202
+
+| **document_api.py**
+| All document operations
+| `get_structure()`, `get_section()`, `search_content()`, `get_metadata()`, `update_section_content()`, `insert_section()`
+| 435
+
+| **protocol_handler.py**
+| MCP protocol handling
+| `handle_mcp_request()` (routes initialize, tools/list, tools/call)
+| 279
+
+| **webserver_manager.py**
+| Web server lifecycle
+| `find_free_port()`, `start_webserver_thread()`, `get_webserver_status()`
+| 121
+
+| **document_parser.py**
+| Parsing logic
+| `parse_file()`, `resolve_includes()`
+| 82
+
+| **content_editor.py**
+| File modifications
+| `update_section()`, atomic writes
+| 46
+
+| **file_watcher.py**
+| File system monitoring
+| `start()`, `_on_modified()`
+| 64
+|===
+
+**Total: 1,229 lines across 7 focused modules** (vs 916 lines in monolithic mcp_server.py)
+
+==== Dependency Injection Pattern
+
+The orchestrator (`MCPDocumentationServer`) creates and injects dependencies:
+
+[source,python]
+----
+class MCPDocumentationServer:
+    def __init__(self, project_root: Path, enable_webserver: bool = True):
+        # Core components
+        self.parser = DocumentParser()
+        self.editor = ContentEditor(project_root)
+        self.diff_engine = DiffEngine()
+
+        # Shared state
+        self.sections = {}  # In-memory index
+        self.root_files = []
+        self.included_files = set()
+
+        # Modular components (dependency injection)
+        self.doc_api = DocumentAPI(self)  # Receives server instance
+        self.webserver = WebserverManager(self)
+
+        # Initialize
+        self._discover_root_files()
+        self._parse_project()
+        self.file_watcher = FileWatcher(project_root, self._on_files_changed)
+----
+
+Each module receives `self` (the server instance) to access shared state:
+
+[source,python]
+----
+class DocumentAPI:
+    def __init__(self, server: 'MCPDocumentationServer'):
+        self.server = server  # Access to sections, parser, editor
+
+    def get_structure(self, max_depth: int = 3):
+        # Accesses self.server.sections
+        return self._build_hierarchy(self.server.sections, max_depth)
+----
+
+**Mental Model:** *"Modules are pure logic, orchestrator holds state"*
+
+This pattern avoids circular dependencies while maintaining clear ownership.
+
+==== Module Interactions
+
+**Typical MCP Request Flow:**
+
+1. **MCP Client** → sends JSON-RPC request
+2. **protocol_handler.py** → `handle_mcp_request()` parses request
+3. **protocol_handler.py** → routes to appropriate tool
+4. **document_api.py** → executes tool (e.g., `get_structure()`)
+5. **document_api.py** → accesses `self.server.sections` (shared state)
+6. **protocol_handler.py** → formats response
+7. **MCP Client** → receives JSON-RPC response
+
+**File Modification Flow:**
+
+1. **DocumentAPI** → `update_section_content(path, content)`
+2. **DocumentAPI** → calls `self.server.editor.update_section()`
+3. **ContentEditor** → atomic write via backup-and-replace (ADR-004)
+4. **FileWatcher** → detects change
+5. **MCPDocumentationServer** → `_on_files_changed()` → re-parses
+6. **Sections Index** → updated with new content
+
+==== Design Rationale (Mental Model)
+
+**Why this modular split?** (See ADR-006 for full rationale)
+
+1. **Cognitive Load Management**
+   - Mental Model: "One module = one mental context"
+   - 500 lines ≈ maximum cognitive capacity for understanding a file
+   - Each module can be understood independently
+
+2. **Testability**
+   - Each module testable in isolation
+   - Result: 82% coverage (vs ~50% before modularization)
+
+3. **Parallel Development**
+   - Different concerns = different modules
+   - Reduced merge conflicts
+
+4. **Clear Ownership**
+   - Document operations → document_api.py
+   - Protocol concerns → protocol_handler.py
+   - Web server → webserver_manager.py
+   - No ambiguity about "where does this code go?"
+
+**Trade-off:** Delegation adds minor indirection overhead
+**Justification:** Clarity gain >>> performance cost
+
+=== 5.4 Data Structures
+
+This section documents the core data structures that represent the document model.
+
+==== Section (Document Node)
+
+The fundamental unit of the document hierarchy:
+
+[source,python]
+----
+@dataclass
+class Section:
+    """Represents a logical section in the documentation"""
+
+    id: str              # Hierarchical path, e.g., "chapter-1.section-2"
+    title: str           # Section title (from heading)
+    content: str         # Text content of this section
+    level: int           # Heading level (1=chapter, 2=section, 3=subsection, etc.)
+    children: List[str]  # IDs of child sections (hierarchical structure)
+    source_file: str     # Path to source .adoc/.md file
+    line_start: int      # Start line in source file (1-indexed)
+    line_end: int        # End line in source file (inclusive)
+----
+
+**Mental Model:** *"A Section is a logical chunk, not a file chunk"*
+
+Key insights:
+- `id` encodes hierarchy: "chapter-1.section-2.subsection-3"
+- `source_file` + `line_start`/`line_end` enable precise file editing
+- Multiple sections can come from one file (via includes)
+- One section's content can span multiple files (via includes)
+
+**Example:**
+
+----
+docs/architecture.adoc (lines 1-100):
+  Section(id="architecture-documentation", level=1, line_start=1, line_end=2)
+  Section(id="architecture-documentation.introduction", level=2, line_start=3, line_end=10)
+
+_introduction.adoc (lines 1-50) [included by architecture.adoc]:
+  Section(id="architecture-documentation.introduction.goals", level=3, line_start=1, line_end=20)
+----
+
+==== Structure Index (In-Memory)
+
+The server maintains an in-memory index for O(1) lookups:
+
+[source,python]
+----
+class MCPDocumentationServer:
+    sections: Dict[str, Section]  # id → Section mapping
+    root_files: List[Path]        # Files not included by others
+    included_files: Set[Path]     # Files included by others
+----
+
+**Performance:**
+- Lookup by ID: O(1)
+- All sections at level N: O(n) linear scan
+- Search by query: O(n) with early termination
+
+**Memory:**
+- ~600 pages ≈ ~1000 sections
+- ~1000 sections × ~1KB/section ≈ 1MB in-memory
+- Acceptable trade-off for instant access
+
+==== Include Graph
+
+Tracked implicitly via `source_file` and `included_files`:
+
+----
+root_files = [main.adoc, other.adoc]
+included_files = [_intro.adoc, _glossary.adoc]
+
+Logical structure:
+  main.adoc
+    ├── Section from main.adoc
+    ├── Section from _intro.adoc (included)
+    └── Section from _glossary.adoc (included)
+----
+
+**Mental Model:** *"Includes are flattened during parsing, tracked for navigation"*
+
+The parser resolves includes recursively, flattening the logical document tree while preserving file provenance for editing.

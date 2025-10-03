@@ -17,3 +17,280 @@ The error handling strategy is designed to be robust and developer-friendly, sup
 === 8.3 Logging and Monitoring
 *   **Logging**: The application will use structured logging (e.g., JSON format) and log to `stdout`. This allows for easy integration with modern log aggregation tools like the ELK stack, Splunk, or cloud-based logging services. Log levels (DEBUG, INFO, WARN, ERROR) will be used to control verbosity.
 *   **Monitoring**: FastAPI can be easily instrumented with Prometheus middleware to expose key metrics (e.g., request latency, error rates, memory usage of the index). This allows for proactive monitoring and alerting.
+
+> **Note:** Sections 8.1-8.3 reflect the original design. Sections 8.4-8.6 document the architectural patterns and strategies used in the actual implementation (Oct 2025).
+
+=== 8.4 Architectural Patterns (Actual Implementation)
+
+The implemented system uses several architectural patterns consistently across modules.
+
+==== Extract-and-Delegate Pattern
+
+**Mental Model:** *"Thin orchestrator delegates to focused modules"*
+
+The `MCPDocumentationServer` class acts as a thin orchestrator that creates specialized modules and delegates to them:
+
+[source,python]
+----
+class MCPDocumentationServer:
+    def __init__(self):
+        # Create focused modules
+        self.doc_api = DocumentAPI(self)      # Document operations
+        self.webserver = WebserverManager(self)  # Web server lifecycle
+        self.parser = DocumentParser()        # Parsing logic
+        self.editor = ContentEditor(project_root)  # File modifications
+        self.watcher = FileWatcher(project_root, self._on_files_changed)
+
+    def get_structure(self, max_depth=3):
+        # Delegate to specialized module
+        return self.doc_api.get_structure(max_depth)
+----
+
+**Benefits:**
+- Each module <500 lines (cognitive load management)
+- Clear responsibility boundaries
+- Testable in isolation
+- Easy to understand and modify
+
+**See:** ADR-006 for full rationale and module breakdown.
+
+==== Dependency Injection Pattern
+
+**Mental Model:** *"Modules receive dependencies, don't create them"*
+
+Modules receive the server instance (`self`) to access shared state, avoiding circular dependencies:
+
+[source,python]
+----
+class DocumentAPI:
+    def __init__(self, server: 'MCPDocumentationServer'):
+        self.server = server  # Access to sections, parser, editor
+
+    def search_content(self, query: str):
+        # Access shared state via injected dependency
+        results = []
+        for section_id, section in self.server.sections.items():
+            if query.lower() in section.content.lower():
+                results.append(section)
+        return results
+----
+
+**Benefits:**
+- No circular imports
+- Clear data flow
+- Easy to test (can inject mock server)
+- Single source of truth for state
+
+**Trade-off:** Slight indirection overhead, but clarity gain far exceeds performance cost.
+
+==== File-System-as-Truth Pattern
+
+**Mental Model:** *"The file is the document, not a cache"*
+
+All modifications write directly to source files. The in-memory index is a performance optimization, not the source of truth:
+
+[source,python]
+----
+def update_section(self, path: str, new_content: str):
+    # 1. Write to file (source of truth)
+    self.editor.update_section(path, new_content)
+
+    # 2. Re-parse to update in-memory index (cache refresh)
+    self._parse_project()
+----
+
+**Benefits:**
+- Human editability preserved
+- Git-friendly workflows
+- No database corruption risk
+- Simple recovery model (restart = reload from files)
+
+**See:** ADR-001 for design rationale.
+
+==== Parse-Once, Query-Many Pattern
+
+**Mental Model:** *"Parse the logical tree once, query it many times"*
+
+The system parses the entire project on startup, building an in-memory index for O(1) lookups:
+
+[source,python]
+----
+# Startup: Parse once
+def _parse_project(self):
+    for file in self.root_files:
+        ast = self.parser.parse(file)
+        self._build_sections_index(ast)  # O(n) parsing
+
+# Runtime: Query many
+def get_section(self, path: str):
+    return self.sections.get(path)  # O(1) lookup
+----
+
+**Justification:** Read-heavy workload (90% reads, 10% writes) makes this trade-off favorable.
+
+**See:** ADR-002 for in-memory index design.
+
+=== 8.5 Testing Strategy (Actual Implementation)
+
+The testing strategy evolved through Issue #13 (ADR-008) to achieve 82% coverage.
+
+==== Test Pyramid
+
+**Mental Model:** *"Many unit tests, some integration tests, few end-to-end tests"*
+
+.Test Distribution
+[cols="1,1,2,1"]
+|===
+| Layer | Count | What's Tested | Files
+
+| **Unit Tests**
+| ~80 tests
+| Document parsing, content editing, diff generation, individual modules
+| `test_document_parser.py`, `test_content_editor.py`, `test_diff_engine.py`
+
+| **Integration Tests**
+| ~30 tests
+| MCP protocol handling, document API, web server
+| `test_protocol_handler.py`, `test_document_api.py`, `test_mcp_server.py`
+
+| **End-to-End Tests**
+| ~13 tests
+| Full MCP request/response cycles, file watching, webserver startup
+| `test_webserver_manager.py`, `test_basic.py`
+|===
+
+**Total:** 123 tests, 82% coverage, 121/123 passing (98.4% success rate).
+
+==== Test-Driven Development Workflow
+
+Following user's global instructions, the project uses TDD:
+
+1. **Write failing test** - Define expected behavior
+2. **Run test** - Verify it fails (red)
+3. **Implement feature** - Minimal code to pass test
+4. **Run test** - Verify it passes (green)
+5. **Refactor** - Improve code while tests stay green
+
+**Example from Issue #12 refactoring:**
+- Tests written for monolithic `mcp_server.py` (original)
+- Refactored into 7 modules (ADR-006)
+- Tests caught all breaking changes
+- Zero regressions introduced
+
+==== Test Fixtures and Helpers
+
+Shared test infrastructure reduces duplication:
+
+[source,python]
+----
+@pytest.fixture
+def sample_doc_project(tmp_path):
+    """Creates a temporary AsciiDoc project for testing"""
+    project_dir = tmp_path / "test_project"
+    project_dir.mkdir()
+    (project_dir / "main.adoc").write_text("= Main\n\n== Chapter 1")
+    return project_dir
+
+def test_get_structure(sample_doc_project):
+    server = MCPDocumentationServer(sample_doc_project)
+    structure = server.get_structure()
+    assert "main" in structure
+----
+
+**Benefits:** Fast test execution, isolated tests, easy to add new tests.
+
+==== Coverage Targets
+
+.Coverage Goals
+[cols="1,1,2"]
+|===
+| Module Type | Target | Rationale
+
+| **Critical** (parser, editor)
+| 100%
+| Data integrity depends on these
+
+| **Core** (API, protocol)
+| 90%+
+| Business logic correctness
+
+| **Infrastructure** (webserver, watcher)
+| 70%+
+| Acceptable risk for non-critical features
+
+| **Overall Project**
+| 80%+
+| Balance between safety and velocity
+|===
+
+**Achieved:** 82% overall, 100% for critical modules.
+
+=== 8.6 Code Organization Principles
+
+==== File Size Constraint
+
+**Mental Model:** *"One module = one mental context"*
+
+**Rule:** No file >500 lines (enforced through code reviews)
+
+**Rationale:** 500 lines ≈ maximum cognitive capacity for understanding a file in one sitting (per user's global instructions).
+
+**Example:** Original `mcp_server.py` (916 lines) split into:
+- `mcp_server.py` (202 lines) - Orchestrator
+- `document_api.py` (435 lines) - Document operations
+- `protocol_handler.py` (279 lines) - Protocol logic
+- `webserver_manager.py` (121 lines) - Web server
+
+**See:** ADR-006 for modularization details.
+
+==== Separation of Concerns
+
+**Three Orthogonal Dimensions:**
+
+1. **Logical Structure** (what the document *means*)
+   - Handled by: `DocumentParser`, Structure Index
+   - Mental Model: "Chapters, sections, hierarchy"
+
+2. **Physical Storage** (where content *lives*)
+   - Handled by: File System, `ContentEditor`
+   - Mental Model: "Files, includes, line numbers"
+
+3. **Access Protocol** (how clients *interact*)
+   - Handled by: `ProtocolHandler`, `WebserverManager`
+   - Mental Model: "MCP tools, JSON-RPC, HTTP"
+
+**Mental Model:** *"Logical ≠ Physical ≠ Protocol"*
+
+Each dimension evolves independently (see Chapter 4.0 for full mental model explanation).
+
+==== Naming Conventions
+
+**Mental Model:** *"Names should reveal intent"*
+
+- **Classes:** Noun phrases (`DocumentParser`, `ContentEditor`, `FileWatcher`)
+- **Methods:** Verb phrases (`get_structure()`, `update_section()`, `_on_files_changed()`)
+- **Private methods:** Leading underscore (`_parse_project()`, `_build_hierarchy()`)
+- **Constants:** SCREAMING_SNAKE_CASE (`MAX_DEPTH`, `DEFAULT_PORT`)
+
+**Example:** `get_structure(max_depth)` - instantly clear what it does.
+
+==== Documentation Strategy
+
+**Three-Tier Documentation:**
+
+1. **Code Comments:** Why, not what (for tricky logic)
+2. **Docstrings:** Public API contracts (for developers)
+3. **arc42 + ADRs:** Architecture and decisions (for maintainers)
+
+**Mental Model:** *"Code explains how, docs explain why"*
+
+**Example:**
+```python
+def update_section(self, path: str, content: str):
+    """Update a section's content atomically.
+
+    Uses backup-and-replace strategy to prevent corruption (ADR-004).
+    """
+    # Write to temp file first (atomic operation)
+    self.editor.update_section(path, content)
+```
