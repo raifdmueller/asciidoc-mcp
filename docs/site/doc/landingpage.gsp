@@ -314,8 +314,8 @@ pip install -r requirements.txt</code></pre>
                     </div>
                 </div>
                 <div class="text-center mt-4">
-                    <a class="btn btn-outline-primary" href="${content.rootpath}arc42/04_solution_strategy.html">
-                        Explore the Mental Model →
+                    <a class="btn btn-lg btn-light" href="${content.rootpath}arc42/04_solution_strategy.html">
+                        <i class="fas fa-brain"></i> Explore the Mental Model →
                     </a>
                 </div>
             </div>
@@ -333,7 +333,7 @@ pip install -r requirements.txt</code></pre>
             <a class="btn btn-lg btn-primary me-3" href="https://github.com/raifdmueller/asciidoc-mcp">
                 <i class="fab fa-github"></i> Contribute on GitHub
             </a>
-            <a class="btn btn-lg btn-outline-primary" href="https://github.com/raifdmueller/asciidoc-mcp/issues">
+            <a class="btn btn-lg btn-light" href="https://github.com/raifdmueller/asciidoc-mcp/issues">
                 <i class="fas fa-bug"></i> Report Issues
             </a>
         </div>
