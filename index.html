@@ -282,6 +282,11 @@
     .td-box--5 h2, .td-box--5 h4, .td-box--5 p, .td-box--5 li {
         color: white !important;
     }
+    /* Fix white-on-white contrast: make cards semi-transparent to show gradient */
+    .td-box--5 .card {
+        background: rgba(255, 255, 255, 0.1) !important;
+        border: 1px solid rgba(255, 255, 255, 0.2) !important;
+    }
 
     /* Screenshot/demo image styling */
     .demo-screenshot {
