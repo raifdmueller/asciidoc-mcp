@@ -238,11 +238,20 @@
             A Model Context Protocol (MCP) server designed to help Large Language Models navigate and interact
             with complex AsciiDoc and Markdown documentation efficiently.
         </div>
+
+        <!-- Badges -->
+        <div class="pt-3">
+            <img src="https://img.shields.io/github/stars/raifdmueller/asciidoc-mcp?style=social" alt="GitHub stars" class="me-2">
+            <img src="https://img.shields.io/github/license/raifdmueller/asciidoc-mcp" alt="License" class="me-2">
+            <img src="https://img.shields.io/badge/coverage-82%25-brightgreen" alt="Coverage" class="me-2">
+            <img src="https://img.shields.io/badge/python-3.11%2B-blue" alt="Python 3.11+" class="me-2">
+        </div>
+
         <div class="pt-4 pb-5">
-            <a class="btn btn-lg btn-primary me-3" href="https://github.com/raifdmueller/asciidoc-mcp">
+            <a class="btn btn-lg btn-primary me-3 mb-2" href="https://github.com/raifdmueller/asciidoc-mcp">
                 <i class="fab fa-github"></i> View on GitHub
             </a>
-            <a class="btn btn-lg btn-secondary" href="arc42-template.html">
+            <a class="btn btn-lg btn-secondary mb-2" href="arc42-template.html">
                 <i class="fas fa-book"></i> Read Documentation
             </a>
         </div>
@@ -308,18 +317,25 @@
         </div>
         <div class="row">
             <div class="col-md-6 mb-4">
-                <h4>1. Install Dependencies</h4>
-                <pre class="bg-dark text-light p-3 rounded"><code>python3 -m venv venv
-source venv/bin/activate
+                <h4><span class="badge bg-primary">1</span> Install Dependencies</h4>
+                <pre class="bg-dark text-light p-3 rounded"><code class="language-bash"># Create virtual environment
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
 pip install -r requirements.txt</code></pre>
             </div>
             <div class="col-md-6 mb-4">
-                <h4>2. Configure in Claude Code</h4>
-                <pre class="bg-dark text-light p-3 rounded"><code>{
+                <h4><span class="badge bg-primary">2</span> Configure in Claude Code</h4>
+                <p class="small text-muted">Add to <code>~/.claude.json</code>:</p>
+                <pre class="bg-dark text-light p-3 rounded"><code class="language-json">{
   "mcpServers": {
     "asciidoc-docs-server": {
       "command": "/path/to/venv/bin/python3",
-      "args": ["-m", "src.mcp_server", "/path/to/docs"]
+      "args": ["-m", "src.mcp_server", "/path/to/docs"],
+      "env": {
+        "ENABLE_WEBSERVER": "true"
+      }
     }
   }
 }</code></pre>
@@ -337,6 +353,66 @@ pip install -r requirements.txt</code></pre>
 </section>
 
 <section class="row td-box td-box--4 position-relative td-box--gradient td-box--height-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center mb-5">Who Benefits?</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-robot text-primary"></i> AI/LLM Developers</h4>
+                        <p class="card-text">
+                            Build LLM applications that need to work with large documentation.
+                            The MCP protocol provides structured access without token waste.
+                        </p>
+                        <ul class="small">
+                            <li>Token-efficient document access</li>
+                            <li>Structured navigation API</li>
+                            <li>Ready for Claude Code integration</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-users text-primary"></i> Documentation Teams</h4>
+                        <p class="card-text">
+                            Manage complex arc42 or multi-file documentation projects with AI assistance.
+                            Keep documentation synchronized and accessible.
+                        </p>
+                        <ul class="small">
+                            <li>Auto-refresh on file changes</li>
+                            <li>Include resolution for modular docs</li>
+                            <li>Visual web interface</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-code text-primary"></i> Software Architects</h4>
+                        <p class="card-text">
+                            Maintain architecture documentation (arc42, ADRs) with LLM support.
+                            Query and update documentation efficiently.
+                        </p>
+                        <ul class="small">
+                            <li>Navigate 600+ page projects</li>
+                            <li>Atomic writes ensure integrity</li>
+                            <li>Search across all content</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row td-box td-box--5 position-relative td-box--gradient td-box--height-auto">
     <div class="container">
         <div class="row">
             <div class="col-md-12">
@@ -374,7 +450,7 @@ pip install -r requirements.txt</code></pre>
     </div>
 </section>
 
-<section class="row td-box td-box--5 position-relative td-box--gradient td-box--height-auto">
+<section class="row td-box td-box--6 position-relative td-box--gradient td-box--height-auto">
     <div class="container text-center">
         <h2 class="mb-4">Open Source</h2>
         <p class="lead">
