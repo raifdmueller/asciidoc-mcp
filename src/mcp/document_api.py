@@ -397,6 +397,56 @@ class DocumentAPI:
             except Exception:
                 pass
 
+        # Track cross-references
+        cross_refs = []
+
+        # Regex patterns for different reference types
+        # Pattern 1: <<section-id>> or <<section-id,link text>>
+        simple_ref_pattern = r'<<([^>,\]]+)(?:,[^>]*)?>>'
+        # Pattern 2: xref:section-id[] or xref:section-id[link text]
+        xref_pattern = r'xref:([^\[\]]+)\['
+
+        for section_id, section in self.server.sections.items():
+            content = section.content
+            if not content:
+                continue
+
+            # Find all <<>> style references
+            for match in re.finditer(simple_ref_pattern, content):
+                target = match.group(1).strip()
+
+                # Normalize target to match section IDs (convert to lowercase, replace spaces with dashes)
+                normalized_target = re.sub(r'[^\w\s-]', '', target.lower()).replace(' ', '-')
+
+                # Check if target exists in our sections
+                target_exists = any(normalized_target in sid or sid.endswith(normalized_target) for sid in self.server.sections.keys())
+
+                cross_refs.append({
+                    'from_section': section_id,
+                    'to_section': normalized_target,
+                    'reference_type': '<<>>',
+                    'valid': target_exists
+                })
+
+            # Find all xref: style references
+            for match in re.finditer(xref_pattern, content):
+                target = match.group(1).strip()
+                # Remove file path if present (e.g., "file.adoc#section" -> "section")
+                if '#' in target:
+                    target = target.split('#')[1]
+
+                normalized_target = re.sub(r'[^\w\s-]', '', target.lower()).replace(' ', '-')
+                target_exists = any(normalized_target in sid or sid.endswith(normalized_target) for sid in self.server.sections.keys())
+
+                cross_refs.append({
+                    'from_section': section_id,
+                    'to_section': normalized_target,
+                    'reference_type': 'xref',
+                    'valid': target_exists
+                })
+
+        dependencies['cross_references'] = cross_refs
+
         # Find orphaned sections (sections without proper parent references)
         # Note: Top-level sections (level 1) are NOT considered orphaned even if they have no parent
         all_section_ids = set(self.server.sections.keys())
