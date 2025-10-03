@@ -3,7 +3,7 @@
 :toclevels: 3
 :icons: font
 :numbered:
-:source-highlighter: rouge
+:doctype: book
 :imagesdir: images
 :plantuml-server-url: http://www.plantuml.com/plantuml
 
@@ -18,26 +18,26 @@
 // See https://arc42.org for more information about arc42.
 
 // Include all chapters in order
-include::01_introduction.adoc[]
+include::arc42/01_introduction.adoc[]
 
-include::02_constraints.adoc[]
+include::arc42/02_constraints.adoc[]
 
-include::03_context.adoc[]
+include::arc42/03_context.adoc[]
 
-include::04_solution_strategy.adoc[]
+include::arc42/04_solution_strategy.adoc[]
 
-include::05_building_blocks.adoc[]
+include::arc42/05_building_blocks.adoc[]
 
-include::06_runtime.adoc[]
+include::arc42/06_runtime.adoc[]
 
-include::07_deployment.adoc[]
+include::arc42/07_deployment.adoc[]
 
-include::08_cross_cutting.adoc[]
+include::arc42/08_cross_cutting.adoc[]
 
-include::09_decisions.adoc[]
+include::arc42/09_decisions.adoc[]
 
-include::10_quality.adoc[]
+include::arc42/10_quality.adoc[]
 
-include::11_risks.adoc[]
+include::arc42/11_risks.adoc[]
 
-include::12_glossary.adoc[]
+include::arc42/12_glossary.adoc[]
