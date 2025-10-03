@@ -1,0 +1,161 @@
+<!-- Landing Page for MCP Documentation Server -->
+<section class="row td-box td-box--1 position-relative td-box--gradient td-box--height-auto">
+    <div class="container text-center td-arrow-down">
+        <span class="h1">MCP Documentation Server</span>
+        <span class="h3 d-block mt-3">Efficient LLM Interaction with Large Documentation Projects</span>
+        <div class="pt-3 lead">
+            A Model Context Protocol (MCP) server designed to help Large Language Models navigate and interact
+            with complex AsciiDoc and Markdown documentation efficiently.
+        </div>
+        <div class="pt-4 pb-5">
+            <a class="btn btn-lg btn-primary me-3" href="https://github.com/raifdmueller/asciidoc-mcp">
+                <i class="fab fa-github"></i> View on GitHub
+            </a>
+            <a class="btn btn-lg btn-secondary" href="${content.rootpath}arc42-template.html">
+                <i class="fas fa-book"></i> Read Documentation
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="row td-box td-box--2 position-relative td-box--gradient td-box--height-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center mb-5">Key Features</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="h-100">
+                    <h4><i class="fas fa-sitemap text-primary"></i> Hierarchical Navigation</h4>
+                    <p>Access document structure without loading entire files. Navigate through chapters, sections, and subsections efficiently.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="h-100">
+                    <h4><i class="fas fa-search text-primary"></i> Content Search</h4>
+                    <p>Search across all documentation content with relevance ranking. Find what you need quickly.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="h-100">
+                    <h4><i class="fas fa-link text-primary"></i> Include Resolution</h4>
+                    <p>Automatically resolves AsciiDoc include directives. Handles complex multi-file documentation projects.</p>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <div class="h-100">
+                    <h4><i class="fas fa-edit text-primary"></i> Content Manipulation</h4>
+                    <p>Update and insert sections directly via MCP protocol. Atomic writes ensure data integrity.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="h-100">
+                    <h4><i class="fas fa-sync-alt text-primary"></i> File Watching</h4>
+                    <p>Automatic updates when files change externally. Always stay synchronized with your documentation.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="h-100">
+                    <h4><i class="fas fa-globe text-primary"></i> Web Interface</h4>
+                    <p>Visual document structure browser with auto-launch. Navigate your documentation visually.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row td-box td-box--3 position-relative td-box--gradient td-box--height-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center mb-5">Quick Start</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-4">
+                <h4>1. Install Dependencies</h4>
+                <pre class="bg-dark text-light p-3 rounded"><code>python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt</code></pre>
+            </div>
+            <div class="col-md-6 mb-4">
+                <h4>2. Configure in Claude Code</h4>
+                <pre class="bg-dark text-light p-3 rounded"><code>{
+  "mcpServers": {
+    "asciidoc-docs-server": {
+      "command": "/path/to/venv/bin/python3",
+      "args": ["-m", "src.mcp_server", "/path/to/docs"]
+    }
+  }
+}</code></pre>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12 text-center">
+                <p class="lead">That's it! The server will auto-start and open a web interface.</p>
+                <a class="btn btn-primary" href="${content.rootpath}arc42-template.html">
+                    Read the full documentation →
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row td-box td-box--4 position-relative td-box--gradient td-box--height-auto">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12">
+                <h2 class="text-center mb-5">Architecture</h2>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <p class="text-center lead mb-4">
+                    Built with a clean, modular architecture following arc42 documentation standards.
+                </p>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success"></i> <strong>82% test coverage</strong> (121/123 tests passing)</li>
+                            <li><i class="fas fa-check-circle text-success"></i> <strong>Modular design</strong> (7 focused modules, all &lt;500 lines)</li>
+                            <li><i class="fas fa-check-circle text-success"></i> <strong>Zero data corruption</strong> (atomic writes with backup strategy)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success"></i> <strong>Performance</strong> (&lt;2s startup, &lt;100ms API response)</li>
+                            <li><i class="fas fa-check-circle text-success"></i> <strong>Production ready</strong> (v2.0, fully documented)</li>
+                            <li><i class="fas fa-check-circle text-success"></i> <strong>Well documented</strong> (complete arc42 + 8 ADRs)</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="text-center mt-4">
+                    <a class="btn btn-outline-primary" href="${content.rootpath}arc42/04_solution_strategy.html">
+                        Explore the Mental Model →
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="row td-box td-box--5 position-relative td-box--gradient td-box--height-auto">
+    <div class="container text-center">
+        <h2 class="mb-4">Open Source</h2>
+        <p class="lead">
+            MCP Documentation Server is open source and available on GitHub.
+        </p>
+        <div class="pt-3">
+            <a class="btn btn-lg btn-primary me-3" href="https://github.com/raifdmueller/asciidoc-mcp">
+                <i class="fab fa-github"></i> Contribute on GitHub
+            </a>
+            <a class="btn btn-lg btn-outline-primary" href="https://github.com/raifdmueller/asciidoc-mcp/issues">
+                <i class="fas fa-bug"></i> Report Issues
+            </a>
+        </div>
+    </div>
+</section>

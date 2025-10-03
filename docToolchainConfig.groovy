@@ -87,43 +87,40 @@ microsite.with {
     //project theme
     //site folder relative to the docs folder
     //see 'copyTheme' for more details
-    siteFolder = '../site'
+    siteFolder = 'site'
 
     // the title of the microsite, displayed in the upper left corner
-    title = '##site-title##'
+    title = 'MCP Documentation Server'
     // the next items configure some links in the footer
     //
     // contact eMail
     // example: mailto:bert@example.com
-    footerMail = '##footer-email##'
+    footerMail = ''
     //
     // twitter account url
-    footerTwitter = '##twitter-url##'
+    footerTwitter = ''
     //
     // Stackoverflow QA
-    footerSO = '##Stackoverflow-url##'
+    footerSO = ''
     //
     // Github Repository
-    footerGithub = '##Github-url##'
+    footerGithub = 'https://github.com/raifdmueller/asciidoc-mcp'
     //
     // Slack Channel
-    footerSlack = '##Slack-url##'
+    footerSlack = ''
     //
     // Footer Text
     // example: <small class="text-white">built with docToolchain and jBake <br /> theme: docsy</small>
-    footerText = '<small class="text-white">built with <a href="https://doctoolchain.org">docToolchain</a> and <a href="https://jbake.org">jBake</a> <br /> theme: <a href="https://www.docsy.dev/">docsy</a></small>'
-    //
-    // site title if no other title is given
-    title = 'docToolchain'
+    footerText = '<small class="text-white">MCP Documentation Server - A tool for efficient LLM interaction with large documentation projects<br />built with <a href="https://doctoolchain.org">docToolchain</a> and <a href="https://jbake.org">jBake</a> <br /> theme: <a href="https://www.docsy.dev/">docsy</a></small>'
     //
     // the url to create an issue in github
     // Example: https://github.com/docToolchain/docToolchain/issues/new
-    issueUrl = '##issue-url##'
+    issueUrl = 'https://github.com/raifdmueller/asciidoc-mcp/issues/new'
     //
     // the base url for code files in github
     // Example: https://github.com/doctoolchain/doctoolchain/edit/master/src/docs
-    branch = System.getenv("DTC_PROJECT_BRANCH")?:'-'
-    gitRepoUrl = '##git-repo-url##'
+    branch = System.getenv("DTC_PROJECT_BRANCH")?:'main'
+    gitRepoUrl = 'https://github.com/raifdmueller/asciidoc-mcp/edit/main/docs'
 
     //
     // the location of the landing page
