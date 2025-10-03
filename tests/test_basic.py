@@ -65,7 +65,7 @@ def test_mcp_server():
         server = MCPDocumentationServer(test_dir)
         
         # Test structure
-        structure = server.get_structure(max_depth=2)
+        structure = server.get_structure(start_level=2)
         print(f"Structure keys: {list(structure.keys())}")
         
         # Test section access

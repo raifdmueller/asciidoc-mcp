@@ -446,3 +446,143 @@ Content
             )
             # Should succeed or gracefully handle
             assert isinstance(success, bool)
+
+
+class TestGetStructureStartLevel:
+    """Test new get_structure API with start_level parameter (Issue #28)"""
+
+    @pytest.fixture
+    def hierarchical_server(self, tmp_path):
+        """Create server with deep hierarchical structure"""
+        doc_file = tmp_path / "doc.adoc"
+        doc_file.write_text("""
+= Document Title
+
+== Level 2 Section A
+Content for section A.
+
+=== Level 3 Section A.1
+Content for A.1
+
+==== Level 4 Section A.1.1
+Content for A.1.1
+
+=== Level 3 Section A.2
+Content for A.2
+
+== Level 2 Section B
+Content for section B.
+
+=== Level 3 Section B.1
+Content for B.1
+""")
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+        return server
+
+    def test_get_structure_start_level_1_returns_only_level_1(self, hierarchical_server):
+        """Test get_structure with start_level=1 returns only level 1 sections"""
+        result = hierarchical_server.doc_api.get_structure(start_level=1)
+
+        # Should only contain level 1 sections
+        for section_data in result.values():
+            assert section_data['level'] == 1
+
+    def test_get_structure_start_level_2_returns_only_level_2(self, hierarchical_server):
+        """Test get_structure with start_level=2 returns only level 2 sections"""
+        result = hierarchical_server.doc_api.get_structure(start_level=2)
+
+        # Should only contain level 2 sections
+        for section_data in result.values():
+            assert section_data['level'] == 2
+
+        # Should have Section A and Section B
+        assert len(result) == 2
+
+    def test_get_structure_start_level_3_returns_only_level_3(self, hierarchical_server):
+        """Test get_structure with start_level=3 returns only level 3 sections"""
+        result = hierarchical_server.doc_api.get_structure(start_level=3)
+
+        # Should only contain level 3 sections
+        for section_data in result.values():
+            assert section_data['level'] == 3
+
+        # Should have A.1, A.2, B.1
+        assert len(result) == 3
+
+    def test_get_structure_with_parent_id_filter(self, hierarchical_server):
+        """Test get_structure with parent_id filters to children of that section"""
+        # First get level 2 to find a parent
+        level_2 = hierarchical_server.doc_api.get_structure(start_level=2)
+        parent_id = list(level_2.keys())[0]  # Get first level 2 section
+
+        # Get children of this parent at level 3
+        result = hierarchical_server.doc_api.get_structure(start_level=3, parent_id=parent_id)
+
+        # Should only have children of the specified parent
+        for section_data in result.values():
+            assert section_data['level'] == 3
+            # ID should start with parent_id prefix
+            assert section_data['id'].startswith(parent_id + '.')
+
+    def test_get_structure_parent_id_with_no_children(self, hierarchical_server):
+        """Test get_structure with parent_id that has no children returns empty dict"""
+        # Get a level 4 section (leaf node with no children)
+        all_sections = hierarchical_server.sections
+        level_4_sections = [sid for sid, s in all_sections.items() if s.level == 4]
+
+        if level_4_sections:
+            leaf_id = level_4_sections[0]
+            result = hierarchical_server.doc_api.get_structure(start_level=5, parent_id=leaf_id)
+            assert len(result) == 0
+
+    def test_get_structure_default_start_level_is_1(self, hierarchical_server):
+        """Test get_structure defaults to start_level=1"""
+        result = hierarchical_server.doc_api.get_structure()
+
+        # Should return level 1 sections only
+        for section_data in result.values():
+            assert section_data['level'] == 1
+
+    def test_get_structure_no_longer_accepts_max_depth(self, hierarchical_server):
+        """Test that get_structure no longer accepts max_depth parameter"""
+        # This should raise TypeError because max_depth is removed
+        with pytest.raises(TypeError):
+            hierarchical_server.doc_api.get_structure(max_depth=3)
+
+    def test_get_structure_returns_section_metadata(self, hierarchical_server):
+        """Test that get_structure still returns all required section metadata"""
+        result = hierarchical_server.doc_api.get_structure(start_level=2)
+
+        for section_data in result.values():
+            # Check all required fields are present
+            assert 'title' in section_data
+            assert 'level' in section_data
+            assert 'id' in section_data
+            assert 'children_count' in section_data
+            assert 'line_start' in section_data
+            assert 'line_end' in section_data
+            assert 'source_file' in section_data
+
+    def test_get_structure_token_efficiency(self, tmp_path):
+        """Test that get_structure with start_level is token-efficient for large docs"""
+        # Create a document with many sections (simulating large project)
+        doc_content = "= Large Document\n\n"
+        for i in range(1, 51):  # 50 level 2 sections
+            doc_content += f"== Section {i}\nContent for section {i}.\n\n"
+            for j in range(1, 6):  # 5 level 3 subsections each
+                doc_content += f"=== Subsection {i}.{j}\nContent for subsection {i}.{j}.\n\n"
+
+        doc_file = tmp_path / "large.adoc"
+        doc_file.write_text(doc_content)
+
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+
+        # Get structure with start_level should return much less data
+        level_2_only = server.doc_api.get_structure(start_level=2)
+
+        # Should only have 50 level 2 sections
+        assert len(level_2_only) == 50
+
+        # All should be level 2
+        for section_data in level_2_only.values():
+            assert section_data['level'] == 2
