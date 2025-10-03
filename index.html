@@ -232,48 +232,73 @@
         <!-- Landing Page for MCP Documentation Server -->
 <!-- Custom styles for better visual appearance -->
 <style>
-    /* Fix button contrast on dark background */
-    .td-box--1 .btn-primary {
-        background-color: #ffffff;
-        border-color: #ffffff;
-        color: #2C5F8D;
-        font-weight: 600;
+    /* Fix button contrast on dark background - increased specificity */
+    section.td-box--1 a.btn-primary,
+    .td-box--1 > .container a.btn.btn-primary {
+        background-color: #ffffff !important;
+        border-color: #ffffff !important;
+        color: #2C5F8D !important;
+        font-weight: 600 !important;
     }
-    .td-box--1 .btn-primary:hover {
-        background-color: #f0f0f0;
-        border-color: #f0f0f0;
-        color: #1a3a52;
+    section.td-box--1 a.btn-primary:hover,
+    .td-box--1 > .container a.btn.btn-primary:hover {
+        background-color: #f0f0f0 !important;
+        border-color: #f0f0f0 !important;
+        color: #1a3a52 !important;
     }
-    .td-box--1 .btn-secondary {
-        background-color: #FFA500;
-        border-color: #FFA500;
-        color: #ffffff;
-        font-weight: 600;
+    section.td-box--1 a.btn-secondary,
+    .td-box--1 > .container a.btn.btn-secondary {
+        background-color: #FFA500 !important;
+        border-color: #FFA500 !important;
+        color: #ffffff !important;
+        font-weight: 600 !important;
     }
-    .td-box--1 .btn-secondary:hover {
-        background-color: #FF8C00;
-        border-color: #FF8C00;
+    section.td-box--1 a.btn-secondary:hover,
+    .td-box--1 > .container a.btn.btn-secondary:hover {
+        background-color: #FF8C00 !important;
+        border-color: #FF8C00 !important;
     }
+
     /* Add spacing between sections */
     .td-box {
         padding-top: 4rem !important;
         padding-bottom: 4rem !important;
     }
-    /* Fix hero title spacing from menu */
+
+    /* Fix hero title spacing from menu and make title larger */
     .td-box--1 {
         padding-top: 8rem !important;
     }
-    /* Better code block styling */
+    .td-box--1 .h1 {
+        font-size: 3.5rem !important;
+        font-weight: 700 !important;
+        margin-bottom: 1.5rem !important;
+    }
+
+    /* Better code block styling - responsive */
     .td-box pre {
         margin: 1rem 0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        max-width: 100%;
     }
-    /* Card shadows for depth */
-    .card {
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        transition: box-shadow 0.3s ease;
+    .td-box pre code {
+        white-space: pre-wrap;
+        word-break: break-word;
     }
-    .card:hover {
-        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+
+    /* Card shadows for depth - increased specificity */
+    .td-box .card,
+    section .card {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+        transition: box-shadow 0.3s ease, transform 0.3s ease;
+        border: none !important;
+    }
+    .td-box .card:hover,
+    section .card:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+        transform: translateY(-4px);
     }
 </style>
 
