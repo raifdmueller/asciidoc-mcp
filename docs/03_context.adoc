@@ -2,25 +2,6 @@
 
 This chapter describes the system's boundaries, its users, and its interactions with external systems.
 
-== Live Demo
-Diese Sektion wurde live während der Demonstration erstellt!
-
-Das docs_server MCP Tool ermöglicht:
-- Hierarchische Navigation durch komplexe Dokumentstrukturen
-- Intelligente Suche mit Relevanz-Ranking
-- Direkte Bearbeitung von Dokumentinhalten
-- Token-effiziente Zugriffe (nur benötigte Teile laden)
-== Demo Features
-Diese Sektion wurde live mit dem docs_server MCP Tool erstellt!
-
-Die wichtigsten Features sind:
-- Hierarchische Navigation durch große Dokumentstrukturen
-- Intelligente Suche über alle Inhalte
-- Direkte Bearbeitung von Sektionen
-- Automatische Include-Auflösung für AsciiDoc
-- Token-effiziente Zugriffe (nur benötigte Inhalte laden)
-== Test Section
-This is updated test content to verify the update functionality works correctly.
 === 3.1 Business Context
 
 From a business perspective, the MCP Documentation Server acts as a specialized middleware that enables technical users to interact with documentation projects more effectively. It abstracts away the complexity of file-based document structures.
@@ -70,3 +51,85 @@ Rel(mcp_server, file_system, "Reads/Writes files", "File System API")
 Rel(mcp_server, git, "Is compatible with", "Standard Git commands")
 @enduml
 ----
+
+> **Note:** The diagram above shows the original design. Section 3.3 documents the actual technical dependencies in the implemented system (Oct 2025).
+
+=== 3.3 Technical Dependencies (Actual Implementation)
+
+The implemented system integrates with several external libraries and systems beyond the original design.
+
+==== External Libraries
+
+.External Library Dependencies
+[cols="1,2,2,1"]
+|===
+| Library | Purpose | Version | ADR Reference
+
+| **watchdog**
+| File system event monitoring for auto-refresh
+| 3.1.0+
+| ADR-007 (implicit)
+
+| **pytest**
+| Test framework for comprehensive test coverage
+| 8.0+
+| ADR-008
+
+| **FastAPI**
+| Web server framework for HTTP API and web UI
+| 0.100+
+| Original design
+
+| **uvicorn**
+| ASGI server for FastAPI
+| 0.20+
+| Original design
+
+| **difflib**
+| Standard library for diff generation
+| stdlib
+| Original design
+|===
+
+==== Integration Points
+
+**File System Integration:**
+- **Read:** Project discovery, document parsing, content access
+- **Write:** Atomic file updates via backup-and-replace strategy (ADR-004)
+- **Watch:** Auto-refresh via watchdog library detecting file modifications
+
+**Git Compatibility:**
+- System preserves Git-friendly workflows (human-editable files)
+- No lock files or binary formats introduced
+- Commit-friendly: Changes are atomic and file-based
+
+**Testing Infrastructure:**
+- Pytest for unit and integration tests
+- 82% code coverage across modules
+- Test fixtures for document parsing and file operations
+
+**Web Browser Integration:**
+- Auto-launches default browser on startup
+- Uses `webbrowser` module (cross-platform)
+- Serves web UI on localhost (ports 8080-8099)
+
+==== System Boundaries
+
+**What's Inside the System:**
+- MCP protocol handler (JSON-RPC over stdio/HTTP)
+- Document parser (AsciiDoc/Markdown)
+- In-memory structure index
+- Content editor (atomic writes)
+- File watcher (auto-refresh)
+- Web server (FastAPI-based)
+
+**What's Outside the System:**
+- AsciiDoc/Markdown source files (file system)
+- Version control (Git)
+- MCP clients (Claude Desktop, custom clients)
+- Web browsers (for web UI access)
+- File system events (OS-level inotify/FSEvents)
+
+**Mental Model:** *"The server is a smart cache layer between LLMs and files"*
+
+The system doesn't own the documentation - it provides intelligent access to files owned by the file system and managed by Git. This preserves human editability while enabling LLM efficiency.
