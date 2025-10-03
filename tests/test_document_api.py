@@ -448,6 +448,68 @@ Content
             assert isinstance(success, bool)
 
 
+class TestOrphanedSections:
+    """Test orphaned section detection and resolution (Issue #29)"""
+
+    def test_orphaned_sections_are_minimal(self, tmp_path):
+        """Test that orphaned sections are kept to a minimum"""
+        # Create proper hierarchical document
+        doc_file = tmp_path / "doc.adoc"
+        doc_file.write_text("""
+= Document
+
+== Chapter 1
+Content
+
+=== Section 1.1
+Content
+
+==== Subsection 1.1.1
+Content
+
+== Chapter 2
+Content
+""")
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+        result = server.doc_api.get_dependencies()
+
+        # Count orphaned sections
+        orphaned_count = len(result['orphaned_sections'])
+        total_count = len(server.sections)
+
+        # Less than 5% should be orphaned for well-structured docs
+        orphan_percentage = (orphaned_count / total_count * 100) if total_count > 0 else 0
+
+        assert orphan_percentage < 5.0, f"Too many orphaned sections: {orphaned_count}/{total_count} ({orphan_percentage:.1f}%)"
+
+    def test_all_sections_except_root_should_be_referenced(self, tmp_path):
+        """Test that all sections except top-level have parents"""
+        doc_file = tmp_path / "doc.adoc"
+        doc_file.write_text("""
+= Root Document
+
+== Chapter 1
+Content 1
+
+=== Section 1.1
+Content 1.1
+
+== Chapter 2
+Content 2
+""")
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+        result = server.doc_api.get_dependencies()
+
+        # Only level 1 (root) sections should potentially be orphaned
+        orphaned = result['orphaned_sections']
+
+        for orphaned_id in orphaned:
+            section = server.sections.get(orphaned_id)
+            if section:
+                # Only level 1 sections are allowed to be orphaned
+                assert section.level == 1, f"Level {section.level} section '{orphaned_id}' should not be orphaned"
+
+
 class TestGetStructureStartLevel:
     """Test new get_structure API with start_level parameter (Issue #28)"""
 
