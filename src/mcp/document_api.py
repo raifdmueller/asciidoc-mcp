@@ -316,10 +316,12 @@ class DocumentAPI:
             except Exception:
                 pass
 
-        # Find orphaned sections
+        # Find orphaned sections (sections without proper parent references)
+        # Note: Top-level sections (level 1) are NOT considered orphaned even if they have no parent
         all_section_ids = set(self.server.sections.keys())
         referenced_sections = set()
 
+        # Collect all sections that are referenced as children
         for section in self.server.sections.values():
             for child in section.children:
                 if isinstance(child, str):
@@ -327,7 +329,16 @@ class DocumentAPI:
                 else:
                     referenced_sections.add(child.id)
 
-        dependencies['orphaned_sections'] = list(all_section_ids - referenced_sections)
+        # A section is orphaned if:
+        # 1. It is NOT referenced as anyone's child, AND
+        # 2. It is NOT a top-level section (level 1)
+        orphaned = []
+        for section_id in (all_section_ids - referenced_sections):
+            section = self.server.sections[section_id]
+            if section.level > 1:  # Only non-top-level sections can be orphaned
+                orphaned.append(section_id)
+
+        dependencies['orphaned_sections'] = orphaned
         return dependencies
 
     def validate_structure(self) -> Dict[str, Any]:
