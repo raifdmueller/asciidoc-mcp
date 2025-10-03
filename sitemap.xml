@@ -2,6 +2,66 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
     <url>
+    	<loc>http://jbake.org/arc42/02_constraints.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/07_deployment.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/12_glossary.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/05_building_blocks.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/01_introduction.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/08_cross_cutting.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/11_risks.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/04_solution_strategy.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/06_runtime.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/10_quality.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/09_decisions.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/arc42/03_context.html</loc>
+    	<lastmod>2025-10-03</lastmod>
+    </url>
+
+    <url>
     	<loc>http://jbake.org/search.html</loc>
     	<lastmod>2025-10-03</lastmod>
     </url>

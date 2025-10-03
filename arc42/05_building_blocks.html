@@ -1,0 +1,926 @@
+<!doctype html>
+<html lang="de">
+<head>
+    
+    <!-- sourceuri: arc42/05_building_blocks.html -->
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <meta content="jbake" name="generator">
+    <meta content="INDEX, FOLLOW" name="ROBOTS">
+
+    <title>5. Building Block View</title>
+    <meta content="docToolchain" property="og:title">
+    <meta content="build your dev docs the easy way..." property="og:description">
+    <meta content="website" property="og:type">
+    <meta content="docToolchain" property="og:site_name">
+    <meta content="docToolchain" itemprop="name">
+    <meta content="build your dev docs the easy way..." itemprop="description">
+    <meta content="summary" name="twitter:card">
+    <meta content="docToolchain" name="twitter:title">
+    <meta content="build your dev docs the easy way..." name="twitter:description">
+
+    <link as="style"
+        href="../css/main.min.881fe5f7b53609f55ebfb496c7097c3b30b2e8ceb20a54bc6a48350ded67224f.css"
+        rel="preload">
+    <link href="../css/main.min.881fe5f7b53609f55ebfb496c7097c3b30b2e8ceb20a54bc6a48350ded67224f.css"
+        integrity=""
+        rel="stylesheet">
+    <link href="../css/asciidoctor.css" rel="stylesheet">
+    <link href="../css/prettify.css" rel="stylesheet">
+
+    <!-- favicon generated with https://www.favicon-generator.org/ -->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="apple-touch-icon" sizes="57x57" href="../apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="../apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="../apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="../apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="../apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="../apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="../apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="../ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
+    <script src="../js/jquery-3.5.1.min.js"></script>
+    <style>
+    div.bg-light {
+        background-color: rgba(127, 180, 224, 0.3) !important;
+    }
+
+    /* for blog posts */
+    span.blogtag {
+        border-radius: 10px;
+        background-color: #30638E;
+        color: white;
+        padding: 5px 10px;
+    }
+
+    span.blogblogtag a {
+        color: white;
+        padding: 0
+    }
+
+    span.blogtag span {
+        margin-left: 10px;
+        border-radius: 10px;
+        background-color: white;
+        color: #30638E;
+    }
+
+    div.td-toc {
+        height: calc(100vh - 5rem) !important;
+    }
+
+    div#toctitle {
+        display: none
+    }
+
+    #td-section-nav {
+        max-height: calc(100vh - 4rem);
+        font-size: smaller;
+        line-height: 1.1;
+    }
+
+    .td-page-meta {
+        font-size: smaller;
+        line-height: 1.1;
+    }
+
+    #td-section-nav ul.td-sidebar-nav__section {
+        padding-left: 0;
+    }
+
+    span.navbar-logo {
+        padding-right: 1.5em;
+    }
+
+    .match {
+        font-size: smaller;
+    }
+
+    .admonitionblock td.icon .fa:before {
+        font-size: xxx-large;
+    }
+    </style>
+
+    <style>
+    div.openblock.primary div.content, div.openblock.secondary div.content {
+        border: 1px solid #7a2518;
+        padding: 5px;
+    }
+
+    div.openblock.primary div.content div.content, div.openblock.secondary div.content div.content {
+        border: 0 solid #7a2518;
+        padding: 0;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .switch {
+        border-width: 1px 1px 0 1px;
+        border-style: solid;
+        border-color: #7a2518;
+        display: inline-block;
+    }
+
+    .switch--item {
+        padding: 2px 10px;
+        background-color: #ffffff;
+        color: #7a2518;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .switch--item:not(:first-child) {
+        border-width: 0 0 0 1px;
+        border-style: solid;
+        border-color: #7a2518;
+    }
+
+    .switch--item.selected {
+        background-color: #7a2519;
+        color: #ffffff;
+    }
+    </style>
+
+    <!-- copy-n-paste.js -->
+    <style>
+        div.listingblock {
+            position: relative;
+        }
+        div.listingblock > span.icon {
+            position: absolute;
+            top: 2px;
+            right: 6px;
+            visibility: hidden;
+            z-index: 2;
+            cursor: pointer;
+        }
+        div.listingblock:hover > span.icon {
+            visibility: visible;
+        }
+        div.listingblock div.content pre {
+            margin: 0;
+        }
+    </style>
+    <style>
+        .td-sidebar-nav__section {
+            padding-left: 9px;
+        }
+        details {
+            margin-left: 10px;
+        }
+        summary {
+            cursor: pointer;
+            padding-left: 10px; /* Erhöhter linker Padding für den Pfeil */
+            list-style: none;
+            position: relative; /* Für absolute Positionierung des Pfeils */
+        }
+        summary::before {
+            content: '>';
+            position: absolute;
+            left: 10px; /* Position des Pfeils */
+            top: 50%;
+            transform: translateY(-50%) translateX(-120%);
+            transition: transform 0.3s;
+        }
+        details[open] > summary::before {
+            transform: translateY(-50%) translateX(-120%) rotate(90deg);
+        }
+    </style>
+</head>
+
+<body onload="prettyPrint()" class="td-section">
+<header>
+	
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+    <a class="navbar-brand" href="../index.html">
+        <span class="navbar-logo"><img src="../images/doctoolchain-logo-blue.png" alt="docToolchain" width="32px" /></span><span
+            class="font-weight-bold">MCP Documentation Server</span>
+    </a>
+    <div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+        <ul class="navbar-nav mt-2 mt-lg-0">
+    <li class="nav-item mr-4 mb-2 mb-lg-0"><!--img src="../images/status.png" alt="status" width="16" height="16" onerror="this.style.display='none'"--></li>
+
+            <li class="nav-item mr-4 mb-2 mb-lg-0">
+                <a class="nav-link active" href="../arc42/01_introduction.html"><span>arc42</span></a>
+            </li>
+
+        </ul>
+    </div>
+    <div class="navbar-nav d-none d-lg-block" >
+        <form action="../search.html">
+        <input aria-label="Search this site…" autocomplete="off" class="form-control td-search-input"
+               placeholder=" Search this site…" type="search" name="q">
+        </form>
+    </div>
+</nav>
+
+</header>
+<div class="container-fluid td-outer">
+	<div class="td-main">
+		<div class="row flex-xl-nowrap">
+			<div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+				<div class="td-sidebar__inner" id="td-sidebar-menu" >
+					
+
+        <form class="td-sidebar__search d-flex align-items-center d-lg-none" action="../search.html">
+
+            <input aria-label="Search this site…" name="q" autocomplete="off" class="form-control td-search-input"
+                   placeholder=" Search this site…" type="search">
+
+
+            <button aria-controls="td-docs-nav" aria-expanded="false"
+                    aria-label="Toggle section navigation" class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" data-target="#td-section-nav"
+                    data-toggle="collapse" type="button">
+            </button>
+        </form>
+
+        <nav aria-label="Submenu" class="collapse td-sidebar-nav" id="td-section-nav" >
+
+            <ul class="td-sidebar-nav__section">
+                <li class="td-sidebar-nav__section-title">
+                    <span class="align-left pl-0 pr-2 pt-2 active td-sidebar-link td-sidebar-link__section">arc42</span>
+                </li>
+                <li>
+                  <ul>
+                      <li class="collapse show" id="docs">
+                          
+                        <ul class="td-sidebar-nav__section ul-0">
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/01_introduction.html" title="1. Introduction and Goals">1. Introduction and Goals</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/02_constraints.html" title="2. Architecture Constraints">2. Architecture Constraints</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/03_context.html" title="3. System Scope and Context">3. System Scope and Context</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/04_solution_strategy.html" title="4. Solution Strategy">4. Solution Strategy</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section active"
+                                   href="../arc42/05_building_blocks.html" title="5. Building Block View">5. Building Block View</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/06_runtime.html" title="6. Runtime View">6. Runtime View</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/07_deployment.html" title="7. Deployment View">7. Deployment View</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/08_cross_cutting.html" title="8. Cross-cutting Concepts">8. Cross-cutting Concepts</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/09_decisions.html" title="9. Architecture Decisions">9. Architecture Decisions</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/10_quality.html" title="10. Quality Requirements">10. Quality Requirements</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/11_risks.html" title="11. Risks and Technical Debts">11. Risks and Technical Debts</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/12_glossary.html" title="12. Glossary">12. Glossary</a>
+                                
+                            </li>
+                        </ul>
+                      </li>
+                  </ul>
+                <li>
+        </nav>
+
+				</div>
+			</div>
+			<div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+				<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+					
+
+        <a href="https://github.com/raifdmueller/asciidoc-mcp/edit/main/docs/arc42/05_building_blocks.adoc"
+           target="_blank"><i class="fa fa-edit fa-fw"></i> Improve this doc</a>
+
+
+        <a href="https://github.com/raifdmueller/asciidoc-mcp/issues/new?title=Docs%3A+Feedback+for+%275.+Building+Block+View%27&body=%0A%0A%5BEnter%20feedback%20here%5D%0A%0A%0A---%0A%23page:%20https://github.com/raifdmueller/asciidoc-mcp/edit/main/docs/arc42/05_building_blocks.adoc%0A%23branch:%20main" target="_blank"><i
+                class="fab fa-github fa-fw"></i> Create an issue</a>
+
+        
+
+        <hr />
+
+        <div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_5_building_block_view">5. Building Block View</a>
+<ul class="sectlevel2">
+<li><a href="#_5_1_level_2_system_containers">5.1 Level 2: System Containers</a></li>
+<li><a href="#_5_2_level_3_components_of_the_mcp_api_server">5.2 Level 3: Components of the MCP API Server</a></li>
+<li><a href="#_5_3_modular_mcp_server_architecture_actual_implementation">5.3 Modular MCP Server Architecture (Actual Implementation)</a></li>
+<li><a href="#_5_4_data_structures">5.4 Data Structures</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+
+
+				</div>
+			</div>
+			<main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+				    <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+        <ol class="breadcrumb spb-1">
+            <!--li aria-current="page" class="breadcrumb-item active">
+                <a href="https://example.docsy.dev/docs/">Documentation</a>
+            </li-->
+
+        </ol>
+    </nav>
+
+
+    <div class="td-content">
+        <p>
+            
+<div class="sect1">
+<h2 id="_5_building_block_view">5. Building Block View</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter describes the static decomposition of the system into its key building blocks. We use the C4 model to illustrate the structure at different levels of detail.</p>
+</div>
+<div class="sect2">
+<h3 id="_5_1_level_2_system_containers">5.1 Level 2: System Containers</h3>
+<div class="paragraph">
+<p>The MCP Documentation Server system is composed of two main containers: a web-based user interface and the back-end API server. The file system acts as the system&#8217;s database.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/container-overview.svg" alt="container overview" width="422" height="305">
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_2_level_3_components_of_the_mcp_api_server">5.2 Level 3: Components of the MCP API Server</h3>
+<div class="paragraph">
+<p>We now zoom into the <code>MCP API Server</code> container. It is composed of several components, each with a distinct responsibility, reflecting a classic layered architecture.</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/component-detail-api.svg" alt="component detail api" width="342" height="435">
+</div>
+</div>
+<div class="quoteblock">
+<blockquote>
+<div class="paragraph">
+<p><strong>Note:</strong> The diagram above shows the initial design. Section 5.3 documents the actual implemented modular architecture (Oct 2025) based on ADR-006.</p>
+</div>
+</blockquote>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_3_modular_mcp_server_architecture_actual_implementation">5.3 Modular MCP Server Architecture (Actual Implementation)</h3>
+<div class="paragraph">
+<p>Following the refactoring documented in <strong>ADR-006</strong>, the MCP API Server was split into focused modules to comply with the &lt;500 lines constraint and improve maintainability. This section describes the <strong>actual implemented architecture</strong> as of October 2025.</p>
+</div>
+<div class="sect3">
+<h4 id="_architectural_overview">Architectural Overview</h4>
+<div class="paragraph">
+<p>The MCP Server follows an <strong>Extract-and-Delegate pattern</strong> with <strong>Dependency Injection</strong>:</p>
+</div>
+<div class="imageblock">
+<div class="content">
+<img src="../images/modular-architecture.svg" alt="modular architecture" width="484" height="435">
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_module_responsibilities">Module Responsibilities</h4>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 16.6666%;">
+<col style="width: 33.3333%;">
+<col style="width: 33.3333%;">
+<col style="width: 16.6668%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Module</th>
+<th class="tableblock halign-left valign-top">Responsibility</th>
+<th class="tableblock halign-left valign-top">Key Methods</th>
+<th class="tableblock halign-left valign-top">Lines</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mcp_server.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Server orchestration, initialization, delegation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><em>init</em>()</code>, <code>cleanup()</code>, delegation methods</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">202</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>document_api.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">All document operations</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>get_structure()</code>, <code>get_section()</code>, <code>search_content()</code>, <code>get_metadata()</code>, <code>update_section_content()</code>, <code>insert_section()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">435</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>protocol_handler.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MCP protocol handling</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>handle_mcp_request()</code> (routes initialize, tools/list, tools/call)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">279</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>webserver_manager.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Web server lifecycle</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>find_free_port()</code>, <code>start_webserver_thread()</code>, <code>get_webserver_status()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">121</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>document_parser.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Parsing logic</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>parse_file()</code>, <code>resolve_includes()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">82</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>content_editor.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File modifications</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>update_section()</code>, atomic writes</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">46</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>file_watcher.py</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File system monitoring</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>start()</code>, <code>_on_modified()</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">64</p></td>
+</tr>
+</tbody>
+</table>
+<div class="paragraph">
+<p><strong>Total: 1,229 lines across 7 focused modules</strong> (vs 916 lines in monolithic mcp_server.py)</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_dependency_injection_pattern">Dependency Injection Pattern</h4>
+<div class="paragraph">
+<p>The orchestrator (<code>MCPDocumentationServer</code>) creates and injects dependencies:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">class MCPDocumentationServer:
+    def __init__(self, project_root: Path, enable_webserver: bool = True):
+        # Core components
+        self.parser = DocumentParser()
+        self.editor = ContentEditor(project_root)
+        self.diff_engine = DiffEngine()
+
+        # Shared state
+        self.sections = {}  # In-memory index
+        self.root_files = []
+        self.included_files = set()
+
+        # Modular components (dependency injection)
+        self.doc_api = DocumentAPI(self)  # Receives server instance
+        self.webserver = WebserverManager(self)
+
+        # Initialize
+        self._discover_root_files()
+        self._parse_project()
+        self.file_watcher = FileWatcher(project_root, self._on_files_changed)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each module receives <code>self</code> (the server instance) to access shared state:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">class DocumentAPI:
+    def __init__(self, server: 'MCPDocumentationServer'):
+        self.server = server  # Access to sections, parser, editor
+
+    def get_structure(self, max_depth: int = 3):
+        # Accesses self.server.sections
+        return self._build_hierarchy(self.server.sections, max_depth)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Mental Model:</strong> <strong>"Modules are pure logic, orchestrator holds state"</strong></p>
+</div>
+<div class="paragraph">
+<p>This pattern avoids circular dependencies while maintaining clear ownership.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_module_interactions">Module Interactions</h4>
+<div class="paragraph">
+<p><strong>Typical MCP Request Flow:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>MCP Client</strong> → sends JSON-RPC request</p>
+</li>
+<li>
+<p><strong>protocol_handler.py</strong> → <code>handle_mcp_request()</code> parses request</p>
+</li>
+<li>
+<p><strong>protocol_handler.py</strong> → routes to appropriate tool</p>
+</li>
+<li>
+<p><strong>document_api.py</strong> → executes tool (e.g., <code>get_structure()</code>)</p>
+</li>
+<li>
+<p><strong>document_api.py</strong> → accesses <code>self.server.sections</code> (shared state)</p>
+</li>
+<li>
+<p><strong>protocol_handler.py</strong> → formats response</p>
+</li>
+<li>
+<p><strong>MCP Client</strong> → receives JSON-RPC response</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>File Modification Flow:</strong></p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>DocumentAPI</strong> → <code>update_section_content(path, content)</code></p>
+</li>
+<li>
+<p><strong>DocumentAPI</strong> → calls <code>self.server.editor.update_section()</code></p>
+</li>
+<li>
+<p><strong>ContentEditor</strong> → atomic write via backup-and-replace (ADR-004)</p>
+</li>
+<li>
+<p><strong>FileWatcher</strong> → detects change</p>
+</li>
+<li>
+<p><strong>MCPDocumentationServer</strong> → <code>_on_files_changed()</code> → re-parses</p>
+</li>
+<li>
+<p><strong>Sections Index</strong> → updated with new content</p>
+</li>
+</ol>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_design_rationale_mental_model">Design Rationale (Mental Model)</h4>
+<div class="paragraph">
+<p><strong>Why this modular split?</strong> (See ADR-006 for full rationale)</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Cognitive Load Management</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Mental Model: "One module = one mental context"</p>
+</li>
+<li>
+<p>500 lines ≈ maximum cognitive capacity for understanding a file</p>
+</li>
+<li>
+<p>Each module can be understood independently</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Testability</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Each module testable in isolation</p>
+</li>
+<li>
+<p>Result: 82% coverage (vs ~50% before modularization)</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Parallel Development</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Different concerns = different modules</p>
+</li>
+<li>
+<p>Reduced merge conflicts</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Clear Ownership</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p>Document operations → document_api.py</p>
+</li>
+<li>
+<p>Protocol concerns → protocol_handler.py</p>
+</li>
+<li>
+<p>Web server → webserver_manager.py</p>
+</li>
+<li>
+<p>No ambiguity about "where does this code go?"</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Trade-off:</strong> Delegation adds minor indirection overhead
+<strong>Justification:</strong> Clarity gain &gt;&gt;&gt; performance cost</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_5_4_data_structures">5.4 Data Structures</h3>
+<div class="paragraph">
+<p>This section documents the core data structures that represent the document model.</p>
+</div>
+<div class="sect3">
+<h4 id="_section_document_node">Section (Document Node)</h4>
+<div class="paragraph">
+<p>The fundamental unit of the document hierarchy:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">@dataclass
+class Section:
+    """Represents a logical section in the documentation"""
+
+    id: str              # Hierarchical path, e.g., "chapter-1.section-2"
+    title: str           # Section title (from heading)
+    content: str         # Text content of this section
+    level: int           # Heading level (1=chapter, 2=section, 3=subsection, etc.)
+    children: List[str]  # IDs of child sections (hierarchical structure)
+    source_file: str     # Path to source .adoc/.md file
+    line_start: int      # Start line in source file (1-indexed)
+    line_end: int        # End line in source file (inclusive)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Mental Model:</strong> <strong>"A Section is a logical chunk, not a file chunk"</strong></p>
+</div>
+<div class="paragraph">
+<p>Key insights:
+- <code>id</code> encodes hierarchy: "chapter-1.section-2.subsection-3"
+- <code>source_file</code> + <code>line_start</code>/<code>line_end</code> enable precise file editing
+- Multiple sections can come from one file (via includes)
+- One section&#8217;s content can span multiple files (via includes)</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>docs/architecture.adoc (lines 1-100):
+  Section(id="architecture-documentation", level=1, line_start=1, line_end=2)
+  Section(id="architecture-documentation.introduction", level=2, line_start=3, line_end=10)
+
+_introduction.adoc (lines 1-50) [included by architecture.adoc]:
+  Section(id="architecture-documentation.introduction.goals", level=3, line_start=1, line_end=20)</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_structure_index_in_memory">Structure Index (In-Memory)</h4>
+<div class="paragraph">
+<p>The server maintains an in-memory index for O(1) lookups:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">class MCPDocumentationServer:
+    sections: Dict[str, Section]  # id → Section mapping
+    root_files: List[Path]        # Files not included by others
+    included_files: Set[Path]     # Files included by others</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Performance:</strong>
+- Lookup by ID: O(1)
+- All sections at level N: O(n) linear scan
+- Search by query: O(n) with early termination</p>
+</div>
+<div class="paragraph">
+<p><strong>Memory:</strong>
+- ~600 pages ≈ ~1000 sections
+- ~1000 sections × ~1KB/section ≈ 1MB in-memory
+- Acceptable trade-off for instant access</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_include_graph">Include Graph</h4>
+<div class="paragraph">
+<p>Tracked implicitly via <code>source_file</code> and <code>included_files</code>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>root_files = [main.adoc, other.adoc]
+included_files = [_intro.adoc, _glossary.adoc]
+
+Logical structure:
+  main.adoc
+    ├── Section from main.adoc
+    ├── Section from _intro.adoc (included)
+    └── Section from _glossary.adoc (included)</pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Mental Model:</strong> <strong>"Includes are flattened during parsing, tracked for navigation"</strong></p>
+</div>
+<div class="paragraph">
+<p>The parser resolves includes recursively, flattening the logical document tree while preserving file provenance for editing.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+        </p>
+
+        <style>
+.feedback--answer {
+    display: inline-block;
+}
+
+.feedback--answer-no {
+    margin-left: 1em;
+}
+
+.feedback--response {
+    display: none;
+    margin-top: 1em;
+}
+
+.feedback--response__visible {
+    display: block;
+}
+</style>
+
+<div class="d-print-none">
+    <h2 class="feedback--title">Feedback</h2>
+    <p class="feedback--question">Was this page helpful?</p>
+    <button class="feedback--answer feedback--answer-yes">Yes</button>
+    <button class="feedback--answer feedback--answer-no">No</button>
+    <p class="feedback--response feedback--response-yes">
+        Glad to hear it! Please <a href="https://github.com/raifdmueller/asciidoc-mcp/issues/new?title=Docs%3A+Feedback+for+%275.+Building+Block+View%27%20%F0%9F%91%8D&body=%0A%0A%5BEnter%20feedback%20here%5D%0A%0A%0A---%0A%23page:arc42/05_building_blocks.adoc">tell us
+    how we can improve</a>.
+    </p>
+    <p class="feedback--response feedback--response-no">
+        Sorry to hear that. Please <a href="https://github.com/raifdmueller/asciidoc-mcp/issues/new?title=Docs%3A+Feedback+for+%275.+Building+Block+View%27%20%F0%9F%91%8E&body=%0A%0A%5BEnter%20feedback%20here%5D%0A%0A%0A---%0A%23page:arc42/05_building_blocks.adoc">tell
+    us how we can improve</a>.
+    </p>
+</div>
+<script>
+    const yesButton = document.querySelector('.feedback--answer-yes');
+    const noButton = document.querySelector('.feedback--answer-no');
+    const yesResponse = document.querySelector('.feedback--response-yes');
+    const noResponse = document.querySelector('.feedback--response-no');
+    const disableButtons = () => {
+        yesButton.disabled = true;
+        noButton.disabled = true;
+    };
+    const sendFeedback = (value) => {
+        if (typeof ga !== 'function') return;
+        const args = {
+            command: 'send',
+            hitType: 'event',
+            category: 'Helpful',
+            action: 'click',
+            label: window.location.pathname,
+            value: value
+        };
+        ga(args.command, args.hitType, args.category, args.action, args.label, args.value);
+    };
+    yesButton.addEventListener('click', () => {
+        yesResponse.classList.add('feedback--response__visible');
+        disableButtons();
+        sendFeedback(1);
+    });
+    noButton.addEventListener('click', () => {
+        noResponse.classList.add('feedback--response__visible');
+        disableButtons();
+        sendFeedback(0);
+    });
+</script>
+
+
+        <br>
+
+        <!--div class="text-muted mt-5 pt-3 border-top">Last modified July 3, 2019: <a
+                href="https://github.com/google/docsy-example/commit/d6aa89c8b24089d7e6741030864eff209465e896">Added
+            links to user guide repo (d6aa89c)</a>
+        </div-->
+    </div>
+
+
+			</main>
+
+		</div>
+	</div>
+
+
+	
+    <!--footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">&copy; 2020 | based on <a href="https://arc42.org">arc42 7.0</a> | mixed with <a href="http://getbootstrap.com/">Bootstrap v5.0.0-beta</a> | Baked with <a href="http://jbake.org">JBake v2.6.7</a></span>
+        </div>
+    </footer-->
+
+    <footer class="bg-dark py-5 row d-print-none">
+        <div class="container-fluid mx-sm-5">
+            <div class="row">
+                <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+
+
+                    <ul class="list-inline mb-0">
+                        
+                        
+                        
+                    </ul>
+
+
+                </div>
+                <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+
+
+                    <ul class="list-inline mb-0">
+
+                        
+                        <li aria-label="GitHub" class="list-inline-item mx-2 h3" data-original-title="GitHub" data-placement="top"
+                            data-toggle="tooltip" title="">
+                            <a class="text-white" href="https://github.com/raifdmueller/asciidoc-mcp" rel="noopener noreferrer"
+                               target="_blank">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </li>
+                        
+
+                        
+
+
+                    </ul>
+
+
+                </div>
+                <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+
+                        <small class="text-white">MCP Documentation Server - A tool for efficient LLM interaction with large documentation projects<br />built with <a href="https://doctoolchain.org">docToolchain</a> and <a href="https://jbake.org">jBake</a> <br /> theme: <a href="https://www.docsy.dev/">docsy</a></small>
+
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+
+
+    <script src="../js/main.min.b5fc1b29d2465835844254bd4d804738eaf24c0cec53009b4c6899989be55a47.js"></script>
+    <script src="../js/blocks.js" ></script>
+    <script src="../js/prettify.js"></script>
+    <script src="../js/copy-n-paste.js"></script>
+    <script src="../js/submenucollapse.js"></script>
+
+
+</body>
+</html>

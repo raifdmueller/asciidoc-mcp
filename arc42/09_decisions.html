@@ -1,0 +1,1369 @@
+<!doctype html>
+<html lang="de">
+<head>
+    
+    <!-- sourceuri: arc42/09_decisions.html -->
+    <meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+
+    <meta content="width=device-width, initial-scale=1, shrink-to-fit=no" name="viewport">
+    <meta content="jbake" name="generator">
+    <meta content="INDEX, FOLLOW" name="ROBOTS">
+
+    <title>9. Architecture Decisions</title>
+    <meta content="docToolchain" property="og:title">
+    <meta content="build your dev docs the easy way..." property="og:description">
+    <meta content="website" property="og:type">
+    <meta content="docToolchain" property="og:site_name">
+    <meta content="docToolchain" itemprop="name">
+    <meta content="build your dev docs the easy way..." itemprop="description">
+    <meta content="summary" name="twitter:card">
+    <meta content="docToolchain" name="twitter:title">
+    <meta content="build your dev docs the easy way..." name="twitter:description">
+
+    <link as="style"
+        href="../css/main.min.881fe5f7b53609f55ebfb496c7097c3b30b2e8ceb20a54bc6a48350ded67224f.css"
+        rel="preload">
+    <link href="../css/main.min.881fe5f7b53609f55ebfb496c7097c3b30b2e8ceb20a54bc6a48350ded67224f.css"
+        integrity=""
+        rel="stylesheet">
+    <link href="../css/asciidoctor.css" rel="stylesheet">
+    <link href="../css/prettify.css" rel="stylesheet">
+
+    <!-- favicon generated with https://www.favicon-generator.org/ -->
+    <link rel="shortcut icon" href="../favicon.ico">
+    <link rel="apple-touch-icon" sizes="57x57" href="../apple-icon-57x57.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="../apple-icon-60x60.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="../apple-icon-72x72.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="../apple-icon-76x76.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="../apple-icon-114x114.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="../apple-icon-120x120.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="../apple-icon-144x144.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="../apple-icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="../apple-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="../android-icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="../favicon-96x96.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../favicon-16x16.png">
+    <link rel="manifest" href="../manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="../ms-icon-144x144.png">
+    <meta name="theme-color" content="#ffffff">
+
+    <script src="../js/jquery-3.5.1.min.js"></script>
+    <style>
+    div.bg-light {
+        background-color: rgba(127, 180, 224, 0.3) !important;
+    }
+
+    /* for blog posts */
+    span.blogtag {
+        border-radius: 10px;
+        background-color: #30638E;
+        color: white;
+        padding: 5px 10px;
+    }
+
+    span.blogblogtag a {
+        color: white;
+        padding: 0
+    }
+
+    span.blogtag span {
+        margin-left: 10px;
+        border-radius: 10px;
+        background-color: white;
+        color: #30638E;
+    }
+
+    div.td-toc {
+        height: calc(100vh - 5rem) !important;
+    }
+
+    div#toctitle {
+        display: none
+    }
+
+    #td-section-nav {
+        max-height: calc(100vh - 4rem);
+        font-size: smaller;
+        line-height: 1.1;
+    }
+
+    .td-page-meta {
+        font-size: smaller;
+        line-height: 1.1;
+    }
+
+    #td-section-nav ul.td-sidebar-nav__section {
+        padding-left: 0;
+    }
+
+    span.navbar-logo {
+        padding-right: 1.5em;
+    }
+
+    .match {
+        font-size: smaller;
+    }
+
+    .admonitionblock td.icon .fa:before {
+        font-size: xxx-large;
+    }
+    </style>
+
+    <style>
+    div.openblock.primary div.content, div.openblock.secondary div.content {
+        border: 1px solid #7a2518;
+        padding: 5px;
+    }
+
+    div.openblock.primary div.content div.content, div.openblock.secondary div.content div.content {
+        border: 0 solid #7a2518;
+        padding: 0;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .switch {
+        border-width: 1px 1px 0 1px;
+        border-style: solid;
+        border-color: #7a2518;
+        display: inline-block;
+    }
+
+    .switch--item {
+        padding: 2px 10px;
+        background-color: #ffffff;
+        color: #7a2518;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .switch--item:not(:first-child) {
+        border-width: 0 0 0 1px;
+        border-style: solid;
+        border-color: #7a2518;
+    }
+
+    .switch--item.selected {
+        background-color: #7a2519;
+        color: #ffffff;
+    }
+    </style>
+
+    <!-- copy-n-paste.js -->
+    <style>
+        div.listingblock {
+            position: relative;
+        }
+        div.listingblock > span.icon {
+            position: absolute;
+            top: 2px;
+            right: 6px;
+            visibility: hidden;
+            z-index: 2;
+            cursor: pointer;
+        }
+        div.listingblock:hover > span.icon {
+            visibility: visible;
+        }
+        div.listingblock div.content pre {
+            margin: 0;
+        }
+    </style>
+    <style>
+        .td-sidebar-nav__section {
+            padding-left: 9px;
+        }
+        details {
+            margin-left: 10px;
+        }
+        summary {
+            cursor: pointer;
+            padding-left: 10px; /* Erhöhter linker Padding für den Pfeil */
+            list-style: none;
+            position: relative; /* Für absolute Positionierung des Pfeils */
+        }
+        summary::before {
+            content: '>';
+            position: absolute;
+            left: 10px; /* Position des Pfeils */
+            top: 50%;
+            transform: translateY(-50%) translateX(-120%);
+            transition: transform 0.3s;
+        }
+        details[open] > summary::before {
+            transform: translateY(-50%) translateX(-120%) rotate(90deg);
+        }
+    </style>
+</head>
+
+<body onload="prettyPrint()" class="td-section">
+<header>
+	
+<nav class="js-navbar-scroll navbar navbar-expand navbar-dark flex-column flex-md-row td-navbar">
+    <a class="navbar-brand" href="../index.html">
+        <span class="navbar-logo"><img src="../images/doctoolchain-logo-blue.png" alt="docToolchain" width="32px" /></span><span
+            class="font-weight-bold">MCP Documentation Server</span>
+    </a>
+    <div class="td-navbar-nav-scroll ml-md-auto" id="main_navbar">
+        <ul class="navbar-nav mt-2 mt-lg-0">
+    <li class="nav-item mr-4 mb-2 mb-lg-0"><!--img src="../images/status.png" alt="status" width="16" height="16" onerror="this.style.display='none'"--></li>
+
+            <li class="nav-item mr-4 mb-2 mb-lg-0">
+                <a class="nav-link active" href="../arc42/01_introduction.html"><span>arc42</span></a>
+            </li>
+
+        </ul>
+    </div>
+    <div class="navbar-nav d-none d-lg-block" >
+        <form action="../search.html">
+        <input aria-label="Search this site…" autocomplete="off" class="form-control td-search-input"
+               placeholder=" Search this site…" type="search" name="q">
+        </form>
+    </div>
+</nav>
+
+</header>
+<div class="container-fluid td-outer">
+	<div class="td-main">
+		<div class="row flex-xl-nowrap">
+			<div class="col-12 col-md-3 col-xl-2 td-sidebar d-print-none">
+				<div class="td-sidebar__inner" id="td-sidebar-menu" >
+					
+
+        <form class="td-sidebar__search d-flex align-items-center d-lg-none" action="../search.html">
+
+            <input aria-label="Search this site…" name="q" autocomplete="off" class="form-control td-search-input"
+                   placeholder=" Search this site…" type="search">
+
+
+            <button aria-controls="td-docs-nav" aria-expanded="false"
+                    aria-label="Toggle section navigation" class="btn btn-link td-sidebar__toggle d-md-none p-0 ml-3 fas fa-bars" data-target="#td-section-nav"
+                    data-toggle="collapse" type="button">
+            </button>
+        </form>
+
+        <nav aria-label="Submenu" class="collapse td-sidebar-nav" id="td-section-nav" >
+
+            <ul class="td-sidebar-nav__section">
+                <li class="td-sidebar-nav__section-title">
+                    <span class="align-left pl-0 pr-2 pt-2 active td-sidebar-link td-sidebar-link__section">arc42</span>
+                </li>
+                <li>
+                  <ul>
+                      <li class="collapse show" id="docs">
+                          
+                        <ul class="td-sidebar-nav__section ul-0">
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/01_introduction.html" title="1. Introduction and Goals">1. Introduction and Goals</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/02_constraints.html" title="2. Architecture Constraints">2. Architecture Constraints</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/03_context.html" title="3. System Scope and Context">3. System Scope and Context</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/04_solution_strategy.html" title="4. Solution Strategy">4. Solution Strategy</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/05_building_blocks.html" title="5. Building Block View">5. Building Block View</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/06_runtime.html" title="6. Runtime View">6. Runtime View</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/07_deployment.html" title="7. Deployment View">7. Deployment View</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/08_cross_cutting.html" title="8. Cross-cutting Concepts">8. Cross-cutting Concepts</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section active"
+                                   href="../arc42/09_decisions.html" title="9. Architecture Decisions">9. Architecture Decisions</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/10_quality.html" title="10. Quality Requirements">10. Quality Requirements</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/11_risks.html" title="11. Risks and Technical Debts">11. Risks and Technical Debts</a>
+                                
+                            </li>
+                            <li class="td-sidebar-nav__section-title td-sidebar-nav__section without-child">
+                                <a class="align-left pl-0 pr-2 pt-2 td-sidebar-link td-sidebar-link__section "
+                                   href="../arc42/12_glossary.html" title="12. Glossary">12. Glossary</a>
+                                
+                            </li>
+                        </ul>
+                      </li>
+                  </ul>
+                <li>
+        </nav>
+
+				</div>
+			</div>
+			<div class="d-none d-xl-block col-xl-2 td-toc d-print-none">
+				<div class="td-page-meta ml-2 pb-1 pt-2 mb-0">
+					
+
+        <a href="https://github.com/raifdmueller/asciidoc-mcp/edit/main/docs/arc42/09_decisions.adoc"
+           target="_blank"><i class="fa fa-edit fa-fw"></i> Improve this doc</a>
+
+
+        <a href="https://github.com/raifdmueller/asciidoc-mcp/issues/new?title=Docs%3A+Feedback+for+%279.+Architecture+Decisions%27&body=%0A%0A%5BEnter%20feedback%20here%5D%0A%0A%0A---%0A%23page:%20https://github.com/raifdmueller/asciidoc-mcp/edit/main/docs/arc42/09_decisions.adoc%0A%23branch:%20main" target="_blank"><i
+                class="fab fa-github fa-fw"></i> Create an issue</a>
+
+        
+
+        <hr />
+
+        <div id="toc" class="toc">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_9_architecture_decisions">9. Architecture Decisions</a>
+<ul class="sectlevel2">
+<li><a href="#_adr_001_file_system_as_single_source_of_truth">ADR-001: File-System as Single Source of Truth</a></li>
+<li><a href="#_adr_002_in_memory_index_for_performance">ADR-002: In-Memory Index for Performance</a></li>
+<li><a href="#_adr_003_technology_stack_pythonfastapi">ADR-003: Technology Stack (Python/FastAPI)</a></li>
+<li><a href="#_adr_004_atomic_writes_via_temporary_files">ADR-004: Atomic Writes via Temporary Files</a></li>
+<li><a href="#_adr_005_custom_parser_for_include_resolution">ADR-005: Custom Parser for Include Resolution</a></li>
+<li><a href="#_adr_006_modular_mcp_server_architecture">ADR-006: Modular MCP Server Architecture</a></li>
+<li><a href="#_adr_007_separate_html_template_files">ADR-007: Separate HTML Template Files</a></li>
+<li><a href="#_adr_008_test_infrastructure_with_pytest">ADR-008: Test Infrastructure with pytest</a></li>
+</ul>
+</li>
+</ul>
+</div>
+
+
+
+
+				</div>
+			</div>
+			<main class="col-12 col-md-9 col-xl-8 pl-md-5" role="main">
+				    <nav aria-label="breadcrumb" class="d-none d-md-block d-print-none">
+        <ol class="breadcrumb spb-1">
+            <!--li aria-current="page" class="breadcrumb-item active">
+                <a href="https://example.docsy.dev/docs/">Documentation</a>
+            </li-->
+
+        </ol>
+    </nav>
+
+
+    <div class="td-content">
+        <p>
+            
+<div class="sect1">
+<h2 id="_9_architecture_decisions">9. Architecture Decisions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This chapter records the most important architectural decisions.</p>
+</div>
+<div class="sect2">
+<h3 id="_adr_001_file_system_as_single_source_of_truth">ADR-001: File-System as Single Source of Truth</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-09-18</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gemini Architect</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context">Context</h4>
+<div class="paragraph">
+<p>The PRD requires that the system integrates with existing Git workflows, that files remain human-readable, and that there are no database dependencies. We need a simple, robust way to store the documentation content that honors these constraints.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision">Decision</h4>
+<div class="paragraph">
+<p>The file system will be treated as the single source of truth. The server will not have its own persistent state. All content and structure information is derived directly from the <code>.adoc</code> and <code>.md</code> files within the project directory.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: Simplifies the architecture immensely. No database schema migrations or data synchronization logic needed.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Inherently compatible with Git and other version control systems.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Developers can still use their favorite text editors.</p>
+</li>
+<li>
+<p><strong>Con</strong>: Queries that are not based on the document&#8217;s natural hierarchy may be inefficient to answer.</p>
+</li>
+<li>
+<p><strong>Con</strong>: The system&#8217;s performance is tied to file system performance.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>SQLite Database</strong>: Store content in a local SQLite file. Rejected because it violates the "human-readable files" and "no database" constraints.</p>
+</li>
+<li>
+<p><strong>Key-Value Store (e.g., RocksDB)</strong>: Use an embedded database. Rejected for the same reasons as SQLite.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_002_in_memory_index_for_performance">ADR-002: In-Memory Index for Performance</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-09-18</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gemini Architect</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_2">Context</h4>
+<div class="paragraph">
+<p>The quality goal PERF-1 requires API calls to respond in under 2 seconds. Reading and parsing text files from disk on every request would be too slow for large projects, as identified in the runtime analysis.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_2">Decision</h4>
+<div class="paragraph">
+<p>On startup, the server will perform a one-time scan of the entire project directory. It will parse all documentation files and build an "In-Memory Structure Index". This index will hold metadata about each document, including section names, hierarchical paths, and the start/end line numbers for each section in its source file. Read requests will consult this index to find the exact byte range to read from a file.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_2">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: Read operations (<code>get_section</code>) are extremely fast, as they become simple dictionary lookups followed by a targeted file read.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Enables efficient implementation of structure-aware APIs like <code>get_structure</code>.</p>
+</li>
+<li>
+<p><strong>Con</strong>: Increased memory consumption, proportional to the size of the documentation project.</p>
+</li>
+<li>
+<p><strong>Con</strong>: Slower server startup time due to the initial indexing phase.</p>
+</li>
+<li>
+<p><strong>Con</strong>: A mechanism to detect external file changes (file watching) is needed to keep the index from becoming stale.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_2">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>No Index</strong>: Parse the relevant files on every API request. Rejected due to poor performance that would violate quality goals.</p>
+</li>
+<li>
+<p><strong>Persistent Disk-Based Index</strong>: Cache the index to disk. Rejected as it adds complexity (cache invalidation) and violates the "stateless" principle from the solution strategy.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_003_technology_stack_pythonfastapi">ADR-003: Technology Stack (Python/FastAPI)</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-09-18</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gemini Architect</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_3">Context</h4>
+<div class="paragraph">
+<p>A programming language and web framework are needed to build the MCP API Server. The choice must align with the need for rapid development, strong text-processing capabilities, and high performance for an I/O-bound application.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_3">Decision</h4>
+<div class="paragraph">
+<p>The backend will be implemented in <strong>Python</strong>. The <strong>FastAPI</strong> framework will be used to build the web server and API endpoints.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_3">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: Python has an exceptional ecosystem for text processing and data manipulation.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: FastAPI provides high performance for I/O-bound tasks, data validation, and automatic OpenAPI/Swagger documentation, which helps achieve USAB-1 and USAB-2.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: The large talent pool for Python simplifies maintenance.</p>
+</li>
+<li>
+<p><strong>Con</strong>: Python&#8217;s GIL can be a limitation for CPU-bound tasks, but this application is primarily I/O-bound (reading files, network requests).</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_3">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Node.js/Express</strong>: A strong contender, also asynchronous and fast. Python was chosen for its perceived stronger data science and text-processing ecosystem.</p>
+</li>
+<li>
+<p><strong>Go/Gin</strong>: Offers superior raw performance and concurrency. Rejected because development time is typically longer, and the performance gain was not deemed critical enough to justify the trade-off.</p>
+</li>
+<li>
+<p><strong>Java/Spring</strong>: Mature and robust, but generally more verbose and memory-intensive, which was deemed overkill for this service.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_004_atomic_writes_via_temporary_files">ADR-004: Atomic Writes via Temporary Files</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-09-18</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gemini Architect</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_4">Context</h4>
+<div class="paragraph">
+<p>The quality goal REL-1 (Atomic Writes) is critical to prevent file corruption during <code>update</code> operations. A failure (e.g., disk full, application crash) during a file write could leave a document in an unrecoverable, partially-written state.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_4">Decision</h4>
+<div class="paragraph">
+<p>The <code>File System Handler</code> component will implement atomic writes using a backup-and-replace strategy:
+1. Create a backup of the original file (e.g., <code>doc.adoc</code> &#8594; <code>doc.adoc.bak</code>).
+2. Write all intended changes to a new temporary file (e.g., <code>doc.adoc.tmp</code>).
+3. If the write is successful, atomically rename/move the temporary file to replace the original file.
+4. Delete the backup file.
+5. If any step fails, restore the original file from the backup and delete the temporary file.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_4">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: Guarantees that the primary file is never in a corrupted state.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Relatively simple to implement and understand.</p>
+</li>
+<li>
+<p><strong>Con</strong>: Slightly higher I/O overhead for each write operation (copy, write, move). This is an acceptable trade-off for the gain in reliability.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_4">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Journaling</strong>: Implement a file-based journal to log changes before applying them. Rejected as this is significantly more complex to implement correctly.</p>
+</li>
+<li>
+<p><strong>In-place updates with locking</strong>: Lock the file and update it directly. Rejected because it does not protect against application crashes or system power loss during the write.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_005_custom_parser_for_include_resolution">ADR-005: Custom Parser for Include Resolution</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-09-18</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Gemini Architect</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_5">Context</h4>
+<div class="paragraph">
+<p>A core feature is the ability to map a hierarchical path (e.g., <code>chapter-1.section-2</code>) to a precise location in a source file. This is complicated by AsciiDoc&#8217;s <code>include::[]</code> directive, as content from multiple files is logically part of one document. Existing parsers often flatten the document, losing this critical source-map information.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_5">Decision</h4>
+<div class="paragraph">
+<p>A custom document parser will be developed. This parser will be responsible for:
+1. Parsing the AsciiDoc/Markdown syntax.
+2. Recognizing and recursively resolving <code>include::[]</code> directives.
+3. Building an Abstract Syntax Tree (AST) that retains the original file path and line numbers for every single element of the document.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_5">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: Provides full control over the parsing process, ensuring the crucial source-map information is preserved.</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Allows for tailored error handling of malformed documents or circular includes.</p>
+</li>
+<li>
+<p><strong>Con</strong>: Significant development and maintenance effort compared to using an off-the-shelf library. This is the most complex component of the system.</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_5">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Use an existing library (e.g., <code>asciidoctor.py</code>)</strong>: This was investigated, but most libraries are designed to render documents (e.g., to HTML), not to provide a detailed source map across included files. Adapting them was deemed more complex than building a focused, custom solution.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_006_modular_mcp_server_architecture">ADR-006: Modular MCP Server Architecture</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-10-02</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Development Team</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Related Issues</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub Issue #12</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_6">Context</h4>
+<div class="paragraph">
+<p>The initial implementation of <code>mcp_server.py</code> grew to 916 lines, violating the project&#8217;s CLAUDE.md best practice of keeping files under 500 lines. The file contained three distinct responsibilities:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>MCP Protocol Handling</strong>: JSON-RPC request/response processing</p>
+</li>
+<li>
+<p><strong>Document API Operations</strong>: Implementation of all MCP tools (get_structure, get_section, search, etc.)</p>
+</li>
+<li>
+<p><strong>Server Orchestration</strong>: Initialization, file watching, webserver management</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>This monolithic structure made the codebase difficult to navigate, test, and maintain. Each component had different testing requirements and change frequencies.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_6">Decision</h4>
+<div class="paragraph">
+<p>Split <code>mcp_server.py</code> into four focused modules using the <strong>Extract-and-Delegate</strong> pattern:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong><code>src/mcp/document_api.py</code> (~435 lines)</strong>: All document operation methods</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Structure queries: <code>get_structure()</code>, <code>get_main_chapters()</code>, <code>get_root_files_structure()</code></p>
+</li>
+<li>
+<p>Section access: <code>get_section()</code>, <code>get_sections()</code>, <code>get_sections_by_level()</code></p>
+</li>
+<li>
+<p>Search and metadata: <code>search_content()</code>, <code>get_metadata()</code>, <code>get_dependencies()</code></p>
+</li>
+<li>
+<p>Content modification: <code>update_section_content()</code>, <code>insert_section()</code></p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong><code>src/mcp/protocol_handler.py</code> (~279 lines)</strong>: MCP protocol implementation</p>
+<div class="ulist">
+<ul>
+<li>
+<p>JSON-RPC request processing</p>
+</li>
+<li>
+<p>MCP <code>initialize</code>, <code>tools/list</code>, <code>tools/call</code> handlers</p>
+</li>
+<li>
+<p>Tool routing and parameter validation</p>
+</li>
+<li>
+<p>Error response formatting</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong><code>src/mcp/webserver_manager.py</code> (~121 lines)</strong>: Web server lifecycle</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Port discovery and management</p>
+</li>
+<li>
+<p>Background thread handling</p>
+</li>
+<li>
+<p>Server status tracking</p>
+</li>
+<li>
+<p>Browser auto-launch</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong><code>src/mcp_server.py</code> (~202 lines)</strong>: Thin orchestrator</p>
+<div class="ulist">
+<ul>
+<li>
+<p>Component initialization with dependency injection</p>
+</li>
+<li>
+<p>File watcher coordination</p>
+</li>
+<li>
+<p>Delegation methods for backward compatibility</p>
+</li>
+<li>
+<p>Main entry point and signal handling</p>
+</li>
+</ul>
+</div>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The main server class receives instances of all modules and delegates calls to them, maintaining a clean separation of concerns.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_6">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: All files now comply with &lt;500 line constraint, improving code maintainability</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Clear separation of concerns - each module has a single, well-defined responsibility</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Easier to test - modules can be tested independently with focused test suites</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Better code navigation - developers can quickly find relevant code</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Reduced merge conflicts - changes to different concerns modify different files</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Improved test coverage achieved (69% → 82% through focused module testing)</p>
+</li>
+<li>
+<p><strong>Con</strong>: Slightly more files to navigate (1 file → 4 files)</p>
+</li>
+<li>
+<p><strong>Con</strong>: Delegation pattern adds minor indirection for method calls</p>
+</li>
+<li>
+<p><strong>Neutral</strong>: Backward compatibility maintained through delegation methods in main server class</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_implementation_details">Implementation Details</h4>
+<div class="paragraph">
+<p><strong>Dependency Injection Pattern:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">class MCPDocumentationServer:
+    def __init__(self, project_root: Path, enable_webserver: bool = True):
+        # Core components
+        self.parser = DocumentParser()
+        self.editor = ContentEditor(project_root)
+
+        # Modular components (dependency injection)
+        self.doc_api = DocumentAPI(self)
+        self.webserver = WebserverManager(self)
+
+    # Delegation methods for backward compatibility
+    def get_structure(self, max_depth: int = 3):
+        return self.doc_api.get_structure(max_depth)</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Each module receives the server instance, allowing access to shared state (sections, parser, editor) without circular dependencies.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_6">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Keep monolithic structure</strong>: Rejected due to violation of coding standards and poor maintainability</p>
+</li>
+<li>
+<p><strong>Split into more modules (e.g., separate each tool)</strong>: Rejected as too granular - would create excessive fragmentation</p>
+</li>
+<li>
+<p><strong>Use plugins/extensions pattern</strong>: Rejected as over-engineered for current scope</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_007_separate_html_template_files">ADR-007: Separate HTML Template Files</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-10-02</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Development Team</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Related Issues</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub Issue #11</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_7">Context</h4>
+<div class="paragraph">
+<p>The <code>web_server.py</code> file contained a large embedded HTML template string (~300 lines) for the web interface. This resulted in:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>File size approaching the 500-line limit</p>
+</li>
+<li>
+<p>Poor editor support (no HTML syntax highlighting in Python string)</p>
+</li>
+<li>
+<p>Difficult template maintenance (escaping, formatting issues)</p>
+</li>
+<li>
+<p>Mixed concerns (server logic + presentation)</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_7">Decision</h4>
+<div class="paragraph">
+<p>Extract the HTML template to a separate file: <code>src/templates/web_interface.html</code></p>
+</div>
+<div class="paragraph">
+<p>The template is loaded at runtime using Python&#8217;s standard library:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">from pathlib import Path
+
+template_path = Path(__file__).parent / "templates" / "web_interface.html"
+HTML_TEMPLATE = template_path.read_text(encoding='utf-8')</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_7">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: <code>web_server.py</code> reduced in size, complying with coding standards</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Proper HTML syntax highlighting and validation in editors</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Easier template maintenance and modification</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Clear separation between server logic and presentation</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Template can be edited by frontend developers without touching Python code</p>
+</li>
+<li>
+<p><strong>Con</strong>: Template file must be distributed with the package (handled by package manifest)</p>
+</li>
+<li>
+<p><strong>Con</strong>: Template path resolution adds minor complexity</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_7">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Keep template embedded</strong>: Rejected due to maintainability and file size issues</p>
+</li>
+<li>
+<p><strong>Use template engine (Jinja2, Mako)</strong>: Rejected as overkill - template is static with no dynamic server-side rendering</p>
+</li>
+<li>
+<p><strong>Serve static HTML file directly</strong>: Rejected because template needs runtime parameter substitution</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_008_test_infrastructure_with_pytest">ADR-008: Test Infrastructure with pytest</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-10-02</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Development Team</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Related Issues</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub Issue #13</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_8">Context</h4>
+<div class="paragraph">
+<p>The project initially lacked a comprehensive test infrastructure. As the codebase grew to ~750 lines across multiple modules, the risk of regressions increased significantly. A robust testing framework was needed to:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Ensure code quality and correctness</p>
+</li>
+<li>
+<p>Enable safe refactoring (e.g., the Issue #12 modularization)</p>
+</li>
+<li>
+<p>Measure and improve test coverage</p>
+</li>
+<li>
+<p>Support CI/CD integration</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_8">Decision</h4>
+<div class="paragraph">
+<p>Adopt <strong>pytest</strong> as the testing framework with the following tools:</p>
+</div>
+<div class="paragraph">
+<p><strong>Core Framework:</strong>
+- <strong>pytest</strong>: Modern Python testing framework with fixture support
+- <strong>pytest-cov</strong>: Code coverage measurement and reporting
+- <strong>pytest-html</strong>: HTML test report generation</p>
+</div>
+<div class="paragraph">
+<p><strong>Testing Approach:</strong>
+- Unit tests for individual modules (test_document_parser.py, test_document_api.py, etc.)
+- Integration tests for component interaction
+- Fixture-based test setup for reusable test environments
+- Coverage target: &gt;80% for core modules</p>
+</div>
+<div class="paragraph">
+<p><strong>Directory Structure:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code>tests/
+├── conftest.py              # Shared fixtures
+├── test_document_parser.py  # Parser unit tests
+├── test_document_api.py     # DocumentAPI unit tests
+├── test_protocol_handler.py # Protocol handler tests
+├── test_mcp_server.py       # Server orchestration tests
+└── test_webserver_manager.py # Webserver tests</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_8">Consequences</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Pro</strong>: Modern, expressive test syntax with minimal boilerplate</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Excellent fixture system for test setup/teardown</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Rich plugin ecosystem (coverage, HTML reports, parallel execution)</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Detailed assertion introspection (automatic error messages)</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Easy CI/CD integration (JUnit XML output, exit codes)</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Coverage improved from 0% to 82% through systematic testing</p>
+</li>
+<li>
+<p><strong>Pro</strong>: Enabled safe refactoring with regression detection</p>
+</li>
+<li>
+<p><strong>Con</strong>: Additional dependencies (pytest, pytest-cov, pytest-html)</p>
+</li>
+<li>
+<p><strong>Con</strong>: Learning curve for developers unfamiliar with pytest fixtures</p>
+</li>
+</ul>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_test_coverage_achieved">Test Coverage Achieved</h4>
+<div class="paragraph">
+<p>After implementing comprehensive test suites:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>Overall coverage</strong>: 82% (618/750 lines)</p>
+</li>
+<li>
+<p><strong>document_parser.py</strong>: 100%</p>
+</li>
+<li>
+<p><strong>protocol_handler.py</strong>: 95%</p>
+</li>
+<li>
+<p><strong>document_api.py</strong>: 93%</p>
+</li>
+<li>
+<p><strong>file_watcher.py</strong>: 92%</p>
+</li>
+<li>
+<p><strong>content_editor.py</strong>: 91%</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Test Statistics:</strong>
+- 123 tests total
+- 121 passing (98.4% success rate)
+- ~1,400 lines of test code</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_8">Alternatives Considered</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>unittest (Python standard library)</strong>: Rejected due to verbose syntax and lack of advanced features</p>
+</li>
+<li>
+<p><strong>nose2</strong>: Rejected as pytest has better ecosystem and active development</p>
+</li>
+<li>
+<p><strong>No testing framework</strong>: Rejected as unacceptable for production code quality</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</div>
+        </p>
+
+        <style>
+.feedback--answer {
+    display: inline-block;
+}
+
+.feedback--answer-no {
+    margin-left: 1em;
+}
+
+.feedback--response {
+    display: none;
+    margin-top: 1em;
+}
+
+.feedback--response__visible {
+    display: block;
+}
+</style>
+
+<div class="d-print-none">
+    <h2 class="feedback--title">Feedback</h2>
+    <p class="feedback--question">Was this page helpful?</p>
+    <button class="feedback--answer feedback--answer-yes">Yes</button>
+    <button class="feedback--answer feedback--answer-no">No</button>
+    <p class="feedback--response feedback--response-yes">
+        Glad to hear it! Please <a href="https://github.com/raifdmueller/asciidoc-mcp/issues/new?title=Docs%3A+Feedback+for+%279.+Architecture+Decisions%27%20%F0%9F%91%8D&body=%0A%0A%5BEnter%20feedback%20here%5D%0A%0A%0A---%0A%23page:arc42/09_decisions.adoc">tell us
+    how we can improve</a>.
+    </p>
+    <p class="feedback--response feedback--response-no">
+        Sorry to hear that. Please <a href="https://github.com/raifdmueller/asciidoc-mcp/issues/new?title=Docs%3A+Feedback+for+%279.+Architecture+Decisions%27%20%F0%9F%91%8E&body=%0A%0A%5BEnter%20feedback%20here%5D%0A%0A%0A---%0A%23page:arc42/09_decisions.adoc">tell
+    us how we can improve</a>.
+    </p>
+</div>
+<script>
+    const yesButton = document.querySelector('.feedback--answer-yes');
+    const noButton = document.querySelector('.feedback--answer-no');
+    const yesResponse = document.querySelector('.feedback--response-yes');
+    const noResponse = document.querySelector('.feedback--response-no');
+    const disableButtons = () => {
+        yesButton.disabled = true;
+        noButton.disabled = true;
+    };
+    const sendFeedback = (value) => {
+        if (typeof ga !== 'function') return;
+        const args = {
+            command: 'send',
+            hitType: 'event',
+            category: 'Helpful',
+            action: 'click',
+            label: window.location.pathname,
+            value: value
+        };
+        ga(args.command, args.hitType, args.category, args.action, args.label, args.value);
+    };
+    yesButton.addEventListener('click', () => {
+        yesResponse.classList.add('feedback--response__visible');
+        disableButtons();
+        sendFeedback(1);
+    });
+    noButton.addEventListener('click', () => {
+        noResponse.classList.add('feedback--response__visible');
+        disableButtons();
+        sendFeedback(0);
+    });
+</script>
+
+
+        <br>
+
+        <!--div class="text-muted mt-5 pt-3 border-top">Last modified July 3, 2019: <a
+                href="https://github.com/google/docsy-example/commit/d6aa89c8b24089d7e6741030864eff209465e896">Added
+            links to user guide repo (d6aa89c)</a>
+        </div-->
+    </div>
+
+
+			</main>
+
+		</div>
+	</div>
+
+
+	
+    <!--footer class="footer mt-auto py-3 bg-light">
+        <div class="container">
+            <span class="text-muted">&copy; 2020 | based on <a href="https://arc42.org">arc42 7.0</a> | mixed with <a href="http://getbootstrap.com/">Bootstrap v5.0.0-beta</a> | Baked with <a href="http://jbake.org">JBake v2.6.7</a></span>
+        </div>
+    </footer-->
+
+    <footer class="bg-dark py-5 row d-print-none">
+        <div class="container-fluid mx-sm-5">
+            <div class="row">
+                <div class="col-6 col-sm-4 text-xs-center order-sm-2">
+
+
+                    <ul class="list-inline mb-0">
+                        
+                        
+                        
+                    </ul>
+
+
+                </div>
+                <div class="col-6 col-sm-4 text-right text-xs-center order-sm-3">
+
+
+                    <ul class="list-inline mb-0">
+
+                        
+                        <li aria-label="GitHub" class="list-inline-item mx-2 h3" data-original-title="GitHub" data-placement="top"
+                            data-toggle="tooltip" title="">
+                            <a class="text-white" href="https://github.com/raifdmueller/asciidoc-mcp" rel="noopener noreferrer"
+                               target="_blank">
+                                <i class="fab fa-github"></i>
+                            </a>
+                        </li>
+                        
+
+                        
+
+
+                    </ul>
+
+
+                </div>
+                <div class="col-12 col-sm-4 text-center py-2 order-sm-2">
+
+                        <small class="text-white">MCP Documentation Server - A tool for efficient LLM interaction with large documentation projects<br />built with <a href="https://doctoolchain.org">docToolchain</a> and <a href="https://jbake.org">jBake</a> <br /> theme: <a href="https://www.docsy.dev/">docsy</a></small>
+
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/popper.min.js"></script>
+    <script src="../js/bootstrap.min.js"></script>
+
+
+    <script src="../js/main.min.b5fc1b29d2465835844254bd4d804738eaf24c0cec53009b4c6899989be55a47.js"></script>
+    <script src="../js/blocks.js" ></script>
+    <script src="../js/prettify.js"></script>
+    <script src="../js/copy-n-paste.js"></script>
+    <script src="../js/submenucollapse.js"></script>
+
+
+</body>
+</html>
