@@ -25,73 +25,69 @@ class DocumentAPI:
         """
         self.server = server
 
-    def get_structure(self, max_depth: int = 3) -> Dict[str, Any]:
-        """Get hierarchical table of contents up to max_depth, sorted by document position"""
+    def get_structure(self, start_level: int = 1, parent_id: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Get sections at a specific level (always depth=1 to avoid token limits)
 
-        # Build hierarchical structure with proper sorting
-        structure = {}
-        section_map = {}  # For quick lookup
+        Args:
+            start_level: Which hierarchy level to return (default: 1)
+            parent_id: Optional filter - only return children of this section
 
-        # First, collect all sections at the requested depth
-        filtered_sections = [(section_id, section) for section_id, section in self.server.sections.items()
-                           if section.level <= max_depth]
+        Returns:
+            Dict with section data for the requested level
+        """
 
-        # Sort by a combination of factors to get proper document order:
-        # 1. Extract chapter number from title if present
-        # 2. Fall back to line_start
-        # 3. Fall back to title alphabetically
+        # Collect all sections at the requested level
+        filtered_sections = [
+            (section_id, section)
+            for section_id, section in self.server.sections.items()
+            if section.level == start_level
+        ]
+
+        # If parent_id is specified, filter to only children of that parent
+        if parent_id:
+            filtered_sections = [
+                (section_id, section)
+                for section_id, section in filtered_sections
+                if section_id.startswith(parent_id + '.')
+            ]
+
+        # Sort by chapter number (if present), then line_start, then title
         def get_sort_key(item):
             section_id, section = item
-            title = section.title
-
-            # Try to extract chapter number from title (e.g., "1. Introduction", "10. Quality")
-            chapter_match = re.match(r'^(\d+)\.', title)
-            if chapter_match:
-                return (int(chapter_match.group(1)), section.line_start, title)
-
-            # For sections without chapter numbers, use line_start and title
-            return (999, section.line_start, title)
+            chapter_match = re.match(r'^(\d+)\.', section.title)
+            chapter_num = int(chapter_match.group(1)) if chapter_match else 999
+            return (chapter_num, section.line_start, section.title)
 
         sorted_sections = sorted(filtered_sections, key=get_sort_key)
 
+        # Build flat structure (no hierarchy needed since we only return one level)
+        structure = {}
         for section_id, section in sorted_sections:
-            # Safe children count
-            children_count = 0
-            if hasattr(section, 'children') and section.children:
-                children_count = len(section.children)
+            children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
 
-            section_data = {
+            structure[section_id] = {
                 'title': section.title,
                 'level': section.level,
                 'id': section_id,
                 'children_count': children_count,
                 'line_start': section.line_start,
                 'line_end': section.line_end,
-                'source_file': section.source_file,
-                'children': []  # Will be populated with child objects
+                'source_file': section.source_file
             }
-
-            section_map[section_id] = section_data
-
-            # Determine parent
-            if '.' in section_id:
-                parent_id = '.'.join(section_id.split('.')[:-1])
-                if parent_id in section_map:
-                    section_map[parent_id]['children'].append(section_data)
-                else:
-                    # Parent not found, add to root
-                    structure[section_id.split('.')[-1]] = section_data
-            else:
-                # Root level section
-                structure[section_id] = section_data
 
         return structure
 
     def get_main_chapters(self) -> Dict[str, Any]:
         """Get main chapters for web interface - handles arc42 structure correctly"""
 
-        # First get the full hierarchical structure with deeper depth for ADRs
-        full_structure = self.get_structure(max_depth=4)
+        # Build structure from all levels since we can't use max_depth anymore
+        # We'll get level 1 and level 2 separately
+        level_1_structure = self.get_structure(start_level=1)
+        level_2_structure = self.get_structure(start_level=2)
+
+        # Combine them for backward compatibility
+        full_structure = {**level_1_structure, **level_2_structure}
 
         # Find all numbered chapters (level 2 in arc42 structure) AND other top-level documents
         main_chapters = {}

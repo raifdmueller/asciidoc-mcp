@@ -45,11 +45,12 @@ def handle_mcp_request(request: Dict[str, Any], doc_api: DocumentAPI, webserver:
                     'tools': [
                     {
                         'name': 'get_structure',
-                        'description': 'Get document structure/table of contents',
+                        'description': 'Get sections at a specific hierarchy level (depth=1 to avoid token limits). Use start_level to navigate through levels progressively.',
                         'inputSchema': {
                             'type': 'object',
                             'properties': {
-                                'max_depth': {'type': 'integer', 'default': 3}
+                                'start_level': {'type': 'integer', 'default': 1, 'description': 'Which hierarchy level to return (e.g., 1 for top-level, 2 for second level)'},
+                                'parent_id': {'type': 'string', 'description': 'Optional: Only return children of this section ID'}
                             }
                         }
                     },
@@ -155,8 +156,9 @@ def handle_mcp_request(request: Dict[str, Any], doc_api: DocumentAPI, webserver:
             arguments = params.get('arguments', {})
 
             if tool_name == 'get_structure':
-                max_depth = arguments.get('max_depth', 3)
-                result = doc_api.get_structure(max_depth)
+                start_level = arguments.get('start_level', 1)
+                parent_id = arguments.get('parent_id', None)
+                result = doc_api.get_structure(start_level, parent_id)
                 return {
                     'jsonrpc': '2.0',
                     'id': request_id,

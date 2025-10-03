@@ -202,7 +202,7 @@ Content
     # Test delegation methods for DocumentAPI
     def test_get_structure_delegation(self, test_server):
         """Test get_structure delegates to DocumentAPI"""
-        result = test_server.get_structure(max_depth=2)
+        result = test_server.get_structure(start_level=2)
 
         assert isinstance(result, dict)
         assert len(result) > 0
