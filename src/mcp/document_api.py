@@ -247,7 +247,7 @@ class DocumentAPI:
                 for section_id, section in self.server.sections.items():
                     # Check if section comes from a subdirectory file
                     if file_dir in section.source_file and section.source_file != abs_path:
-                        # This section is from an included file
+                        # Collect ALL sections from included files to build complete hierarchy
                         children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
 
                         section_data = {
@@ -264,8 +264,10 @@ class DocumentAPI:
 
                 # If we found sections from includes, build the structure
                 if file_sections:
-                    # Sort sections by line_start to maintain document order
-                    file_sections.sort(key=lambda x: self.server.sections[x[0]].line_start)
+                    # Sort sections by source filename to maintain document order
+                    # (each included file starts at line 1, so line_start doesn't help)
+                    # Extract basename from source_file path for sorting
+                    file_sections.sort(key=lambda x: os.path.basename(self.server.sections[x[0]].source_file))
 
                     # Build hierarchical structure
                     section_map = {}
@@ -281,10 +283,13 @@ class DocumentAPI:
                                 section_map[parent_id]['children'].append(section_data)
                             else:
                                 # Parent not in same file, treat as root-level
-                                root_sections.append(section_data)
+                                # Only add level 2 sections to root (main chapters)
+                                if section_data['level'] == 2:
+                                    root_sections.append(section_data)
                         else:
-                            # Top-level section
-                            root_sections.append(section_data)
+                            # Top-level section - only add if level 2
+                            if section_data['level'] == 2:
+                                root_sections.append(section_data)
 
             # Create file entry
             if file_sections:  # Only add files that have sections
