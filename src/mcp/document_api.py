@@ -236,6 +236,56 @@ class DocumentAPI:
                     # Top-level section
                     root_sections.append(section_data)
 
+            # If no direct sections found, check if this is an aggregator file
+            # (file that only contains includes, like docs/arc42.adoc)
+            if not file_sections:
+                # Get the directory path of this file (e.g., "docs/arc42/")
+                file_dir = str(root_file.parent / root_file.stem)
+
+                # Look for sections from files in the same-named subdirectory
+                # e.g., docs/arc42.adoc -> docs/arc42/*.adoc
+                for section_id, section in self.server.sections.items():
+                    # Check if section comes from a subdirectory file
+                    if file_dir in section.source_file and section.source_file != abs_path:
+                        # This section is from an included file
+                        children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
+
+                        section_data = {
+                            'title': section.title,
+                            'level': section.level,
+                            'id': section_id,
+                            'children_count': children_count,
+                            'line_start': section.line_start,
+                            'line_end': section.line_end,
+                            'source_file': section.source_file,
+                            'children': []
+                        }
+                        file_sections.append((section_id, section_data))
+
+                # If we found sections from includes, build the structure
+                if file_sections:
+                    # Sort sections by line_start to maintain document order
+                    file_sections.sort(key=lambda x: self.server.sections[x[0]].line_start)
+
+                    # Build hierarchical structure
+                    section_map = {}
+                    root_sections = []
+
+                    for section_id, section_data in file_sections:
+                        section_map[section_id] = section_data
+
+                        # Determine parent within same file
+                        if '.' in section_id:
+                            parent_id = '.'.join(section_id.split('.')[:-1])
+                            if parent_id in section_map:
+                                section_map[parent_id]['children'].append(section_data)
+                            else:
+                                # Parent not in same file, treat as root-level
+                                root_sections.append(section_data)
+                        else:
+                            # Top-level section
+                            root_sections.append(section_data)
+
             # Create file entry
             if file_sections:  # Only add files that have sections
                 total_sections = len(file_sections)
