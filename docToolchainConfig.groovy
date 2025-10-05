@@ -23,7 +23,7 @@ inputPath = 'docs';
 // pdfThemeDir = './src/docs/pdfTheme'
 
 inputFiles = [
-        [file: 'arc42-template.adoc',       formats: ['html','pdf']],
+        [file: 'arc42.adoc',       formats: ['html','pdf']],
         //[file: 'arc42-template.adoc',    formats: ['html','pdf']],
         /** inputFiles **/
 ]
