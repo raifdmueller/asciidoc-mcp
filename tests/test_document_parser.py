@@ -172,3 +172,58 @@ class TestDocumentParser:
         sections, _ = parser.parse_project(test_file)
 
         assert len(sections) > 0
+
+    def test_code_blocks_not_parsed_as_headers(self, temp_project_dir):
+        """Test that content inside code blocks is not parsed as section headers (Issue #49)"""
+        test_file = temp_project_dir / "test_codeblock.adoc"
+
+        # Create document with PlantUML code block containing header-like syntax
+        content = """= Test Document
+
+== Real Section
+
+Some content before the code block.
+
+[plantuml]
+----
+== Initial Setup ==
+Server -> Client: connect()
+
+== External Modification ==
+Client -> Server: update()
+----
+
+== Another Real Section
+
+[source,python]
+----
+# Create focused modules
+class Example:
+    pass
+----
+
+=== Real Subsection
+
+Content here.
+"""
+        test_file.write_text(content)
+
+        parser = DocumentParser()
+        sections, _ = parser.parse_project(test_file)
+
+        # Extract section titles
+        section_titles = [s.title for s in sections.values()]
+
+        # Verify real sections are present
+        assert "Test Document" in section_titles
+        assert "Real Section" in section_titles
+        assert "Another Real Section" in section_titles
+        assert "Real Subsection" in section_titles
+
+        # Verify code block content is NOT parsed as sections
+        assert "Initial Setup ==" not in section_titles
+        assert "External Modification ==" not in section_titles
+        assert "Create focused modules" not in section_titles
+
+        # Verify total section count (should be only 4 real sections)
+        assert len(sections) == 4, f"Expected 4 sections but got {len(sections)}: {section_titles}"
