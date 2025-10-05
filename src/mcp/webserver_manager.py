@@ -52,12 +52,12 @@ class WebserverManager:
             # Set the global doc_server
             web_server.doc_server = self.server
 
-            # Configure uvicorn
+            # Configure uvicorn (disable logging config for MCP compatibility)
             config = uvicorn.Config(
                 web_server.app,
                 host="127.0.0.1",
                 port=self.webserver_port,
-                log_level="error",
+                log_config=None,  # Disable default logging (incompatible with MCP stdio)
                 access_log=False
             )
             server = uvicorn.Server(config)
