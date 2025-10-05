@@ -420,7 +420,7 @@
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="../images/modular-architecture.svg" alt="modular architecture" width="1480" height="771">
+<img src="../images/modular-architecture.svg" alt="modular architecture" width="1494" height="801">
 </div>
 </div>
 </div>
@@ -444,9 +444,9 @@
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>mcp_server.py</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Server orchestration, initialization, delegation</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code><em>init</em>()</code>, <code>cleanup()</code>, delegation methods</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">202</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Server orchestration, MCP tool registration</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code><em>init</em>()</code>, <code>cleanup()</code>, <code>@mcp.tool()</code> decorators (10 tools), delegation methods</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">290</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>document_api.py</strong></p></td>
@@ -455,10 +455,10 @@
 <td class="tableblock halign-left valign-top"><p class="tableblock">435</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>protocol_handler.py</strong></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">MCP protocol handling</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>handle_mcp_request()</code> (routes initialize, tools/list, tools/call)</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">279</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><strong>FastMCP SDK</strong></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">MCP protocol handling (external dependency)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>FastMCP()</code>, <code>mcp.run()</code>, automatic schema generation via type hints</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">mcp[cli]&gt;=1.0.0</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><strong>webserver_manager.py</strong></p></td>
@@ -543,30 +543,30 @@
 <div class="sect3">
 <h4 id="_module_interactions">Module Interactions</h4>
 <div class="paragraph">
-<p><strong>Typical MCP Request Flow:</strong></p>
+<p><strong>Typical MCP Request Flow (FastMCP SDK):</strong></p>
 </div>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>MCP Client</strong> → sends JSON-RPC request</p>
+<p><strong>MCP Client</strong> → sends JSON-RPC request via stdin</p>
 </li>
 <li>
-<p><strong>protocol_handler.py</strong> → <code>handle_mcp_request()</code> parses request</p>
+<p><strong>FastMCP SDK</strong> → <code>mcp.run()</code> receives and parses request</p>
 </li>
 <li>
-<p><strong>protocol_handler.py</strong> → routes to appropriate tool</p>
+<p><strong>FastMCP SDK</strong> → routes to decorated tool (e.g., <code>@mcp.tool() def get_structure()</code>)</p>
 </li>
 <li>
-<p><strong>document_api.py</strong> → executes tool (e.g., <code>get_structure()</code>)</p>
+<p><strong>Tool Function</strong> → accesses <code>_server.doc_api.get_structure()</code> (global instance)</p>
 </li>
 <li>
-<p><strong>document_api.py</strong> → accesses <code>self.server.sections</code> (shared state)</p>
+<p><strong>document_api.py</strong> → executes business logic, accesses <code>self.server.sections</code> (shared state)</p>
 </li>
 <li>
-<p><strong>protocol_handler.py</strong> → formats response</p>
+<p><strong>FastMCP SDK</strong> → automatically serializes return value to JSON-RPC response</p>
 </li>
 <li>
-<p><strong>MCP Client</strong> → receives JSON-RPC response</p>
+<p><strong>MCP Client</strong> → receives JSON-RPC response via stdout</p>
 </li>
 </ol>
 </div>
@@ -653,7 +653,7 @@
 <p>Document operations → document_api.py</p>
 </li>
 <li>
-<p>Protocol concerns → protocol_handler.py</p>
+<p>Protocol concerns → FastMCP SDK (external dependency, ADR-009)</p>
 </li>
 <li>
 <p>Web server → webserver_manager.py</p>

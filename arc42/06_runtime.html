@@ -350,7 +350,7 @@
 <li><a href="#_6_3_scenario_server_initialization">6.3 Scenario: Server Initialization</a></li>
 <li><a href="#_6_4_scenario_file_watching_and_auto_refresh_actual_implementation">6.4 Scenario: File Watching and Auto-Refresh (Actual Implementation)</a></li>
 <li><a href="#_6_5_scenario_web_server_startup_and_auto_launch_actual_implementation">6.5 Scenario: Web Server Startup and Auto-Launch (Actual Implementation)</a></li>
-<li><a href="#_6_6_scenario_mcp_protocol_request_handling_actual_implementation">6.6 Scenario: MCP Protocol Request Handling (Actual Implementation)</a></li>
+<li><a href="#_6_6_scenario_mcp_protocol_request_handling_fastmcp_sdk">6.6 Scenario: MCP Protocol Request Handling (FastMCP SDK)</a></li>
 <li><a href="#_6_7_runtime_performance_characteristics">6.7 Runtime Performance Characteristics</a></li>
 </ul>
 </li>
@@ -559,13 +559,13 @@ The web server is a "bonus interface" - the MCP server works fine without it. Th
 </div>
 </div>
 <div class="sect2">
-<h3 id="_6_6_scenario_mcp_protocol_request_handling_actual_implementation">6.6 Scenario: MCP Protocol Request Handling (Actual Implementation)</h3>
+<h3 id="_6_6_scenario_mcp_protocol_request_handling_fastmcp_sdk">6.6 Scenario: MCP Protocol Request Handling (FastMCP SDK)</h3>
 <div class="paragraph">
-<p>This scenario shows the actual modular flow through the refactored architecture (ADR-006).</p>
+<p>This scenario shows the actual flow using FastMCP SDK (ADR-009, migrated Oct 2025).</p>
 </div>
 <div class="imageblock">
 <div class="content">
-<img src="../images/mcp-protocol-flow.svg" alt="mcp protocol flow" width="1576" height="860">
+<img src="../images/mcp-protocol-flow.svg" alt="mcp protocol flow" width="1499" height="1112">
 </div>
 </div>
 <div class="paragraph">
@@ -574,30 +574,49 @@ The web server is a "bonus interface" - the MCP server works fine without it. Th
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><strong>Modular Flow</strong> (vs monolithic original design)</p>
+<p><strong>FastMCP SDK Integration</strong> (ADR-009)</p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>mcp_server.py</code> - Thin orchestrator</p>
+<p>Replaces manual <code>protocol_handler.py</code> (282 lines deleted)</p>
 </li>
 <li>
-<p><code>protocol_handler.py</code> - Protocol logic</p>
+<p><code>@mcp.tool()</code> decorators for tool registration</p>
 </li>
 <li>
-<p><code>document_api.py</code> - Business logic</p>
+<p>Automatic schema generation from Python type hints</p>
 </li>
 <li>
-<p>Clean separation of concerns</p>
+<p>Built-in JSON-RPC 2.0 compliance</p>
 </li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>Dependency Injection</strong></p>
+<p><strong>Decorator-Based Tool Registration</strong></p>
 <div class="ulist">
 <ul>
 <li>
-<p><code>DocAPI</code> receives <code>self.server</code> instance</p>
+<p>10 tools registered with <code>@mcp.tool()</code> decorators</p>
+</li>
+<li>
+<p>Type hints: <code>def get_section(path: str) &#8594; dict</code> → auto-generates schema</p>
+</li>
+<li>
+<p>Docstrings become tool descriptions</p>
+</li>
+<li>
+<p>Global <code>_server</code> instance for state access</p>
+</li>
+</ul>
+</div>
+</li>
+<li>
+<p><strong>Dependency Injection Pattern Maintained</strong></p>
+<div class="ulist">
+<ul>
+<li>
+<p><code>DocAPI</code> still receives <code>self.server</code> instance</p>
 </li>
 <li>
 <p>Access to shared state (<code>sections</code>, <code>parser</code>, etc.)</p>
@@ -605,21 +624,27 @@ The web server is a "bonus interface" - the MCP server works fine without it. Th
 <li>
 <p>No circular dependencies</p>
 </li>
+<li>
+<p>Business logic unchanged</p>
+</li>
 </ul>
 </div>
 </li>
 <li>
-<p><strong>Stateless Protocol Handler</strong></p>
+<p><strong>SDK Advantages</strong></p>
 <div class="ulist">
 <ul>
 <li>
-<p>Pure function: <code>handle_mcp_request(request, &#8230;&#8203;)</code></p>
+<p>Protocol compliance guaranteed (official Anthropic SDK)</p>
 </li>
 <li>
-<p>No instance state, easier to test</p>
+<p>Automatic protocol updates via <code>pip install --upgrade mcp</code></p>
 </li>
 <li>
-<p>Could be parallelized if needed</p>
+<p>Less boilerplate: -638 lines total code reduction</p>
+</li>
+<li>
+<p>Better testability (SDK handles protocol edge cases)</p>
 </li>
 </ul>
 </div>
@@ -628,11 +653,10 @@ The web server is a "bonus interface" - the MCP server works fine without it. Th
 </div>
 <div class="paragraph">
 <p><strong>Performance:</strong>
-- Protocol parsing: &lt;1ms
-- Tool routing: &lt;1ms
-- Tool execution: &lt;100ms (typical)
-- Response formatting: &lt;1ms
-- <strong>Total: &lt;100ms end-to-end</strong></p>
+- SDK parsing/routing: &lt;2ms (slightly slower than manual, but negligible)
+- Tool execution: &lt;100ms (typical, unchanged)
+- SDK response formatting: &lt;1ms
+- <strong>Total: &lt;100ms end-to-end</strong> (no measurable difference)</p>
 </div>
 </div>
 <div class="sect2">
