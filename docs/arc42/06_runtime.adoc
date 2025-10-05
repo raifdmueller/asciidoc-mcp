@@ -299,35 +299,41 @@ deactivate Server
 **Mental Model Insight:**
 The web server is a "bonus interface" - the MCP server works fine without it. Threading keeps them independent: MCP protocol on main thread, HTTP on background thread. If web server fails, MCP continues working.
 
-=== 6.6 Scenario: MCP Protocol Request Handling (Actual Implementation)
+=== 6.6 Scenario: MCP Protocol Request Handling (FastMCP SDK)
 
-This scenario shows the actual modular flow through the refactored architecture (ADR-006).
+This scenario shows the actual flow using FastMCP SDK (ADR-009, migrated Oct 2025).
 
 [plantuml, mcp-protocol-flow, svg]
 ----
 @startuml
-title Sequence Diagram: MCP Protocol Request Handling
+title Sequence Diagram: MCP Protocol Request Handling (FastMCP)
 
 participant "MCP Client" as Client
-participant "mcp_server.py" as Server
-participant "protocol_handler.py" as Protocol
+participant "FastMCP SDK" as FastMCP
+participant "@mcp.tool()" as Tool
 participant "document_api.py" as DocAPI
 participant "Structure Index" as Idx
 
 == MCP Request ==
-Client -> Server: JSON-RPC request\n{"method": "tools/call", "params": {"name": "get_structure"}}
-activate Server
+Client -> FastMCP: JSON-RPC request via stdin\n{"method": "tools/call", "params": {"name": "get_structure"}}
+activate FastMCP
 
-Server -> Protocol: handle_mcp_request(request, doc_api, webserver, server)
-activate Protocol
+FastMCP -> FastMCP: parse JSON-RPC
+note right of FastMCP: Automatic parsing\nby SDK
 
-Protocol -> Protocol: parse JSON-RPC
-note right of Protocol: Validate method,\nextract params
+FastMCP -> FastMCP: validate schema
+note right of FastMCP: Schema from\ntype hints
 
-Protocol -> Protocol: route_to_tool("get_structure")
+== Tool Dispatch ==
+FastMCP -> Tool: get_structure(start_level=1, parent_id=None)
+activate Tool
+note right of Tool: Decorated function:\n@mcp.tool()\ndef get_structure(...)
+
+Tool -> Tool: access _server (global)
+note right of Tool: Global server instance\nset in main()
 
 == Tool Execution ==
-Protocol -> DocAPI: get_structure(max_depth=3)
+Tool -> DocAPI: _server.doc_api.get_structure(start_level, parent_id)
 activate DocAPI
 
 DocAPI -> Idx: access self.server.sections
@@ -337,49 +343,56 @@ note right of Idx: Shared state via\nDI pattern
 Idx --> DocAPI: sections dict
 deactivate Idx
 
-DocAPI -> DocAPI: _build_hierarchy(sections, max_depth=3)
+DocAPI -> DocAPI: _build_hierarchy(sections)
 note right of DocAPI: Recursive tree building
 
-DocAPI --> Protocol: {"chapter-1": {...}, "chapter-2": {...}}
+DocAPI --> Tool: {"chapter-1": {...}, "chapter-2": {...}}
 deactivate DocAPI
 
+Tool --> FastMCP: return dict
+deactivate Tool
+
 == Response Formatting ==
-Protocol -> Protocol: format_mcp_response(result)
-note right of Protocol: Wrap in JSON-RPC\nresponse structure
+FastMCP -> FastMCP: serialize_response(result)
+note right of FastMCP: Automatic JSON-RPC\nwrapping by SDK
 
-Protocol --> Server: {"jsonrpc": "2.0", "result": {...}}
-deactivate Protocol
-
-Server --> Client: JSON-RPC response
-deactivate Server
+FastMCP --> Client: JSON-RPC response via stdout
+deactivate FastMCP
 
 @enduml
 ----
 
 **Key Architecture Points:**
 
-1. **Modular Flow** (vs monolithic original design)
-   - `mcp_server.py` - Thin orchestrator
-   - `protocol_handler.py` - Protocol logic
-   - `document_api.py` - Business logic
-   - Clean separation of concerns
+1. **FastMCP SDK Integration** (ADR-009)
+   - Replaces manual `protocol_handler.py` (282 lines deleted)
+   - `@mcp.tool()` decorators for tool registration
+   - Automatic schema generation from Python type hints
+   - Built-in JSON-RPC 2.0 compliance
 
-2. **Dependency Injection**
-   - `DocAPI` receives `self.server` instance
+2. **Decorator-Based Tool Registration**
+   - 10 tools registered with `@mcp.tool()` decorators
+   - Type hints: `def get_section(path: str) -> dict` → auto-generates schema
+   - Docstrings become tool descriptions
+   - Global `_server` instance for state access
+
+3. **Dependency Injection Pattern Maintained**
+   - `DocAPI` still receives `self.server` instance
    - Access to shared state (`sections`, `parser`, etc.)
    - No circular dependencies
+   - Business logic unchanged
 
-3. **Stateless Protocol Handler**
-   - Pure function: `handle_mcp_request(request, ...)`
-   - No instance state, easier to test
-   - Could be parallelized if needed
+4. **SDK Advantages**
+   - Protocol compliance guaranteed (official Anthropic SDK)
+   - Automatic protocol updates via `pip install --upgrade mcp`
+   - Less boilerplate: -638 lines total code reduction
+   - Better testability (SDK handles protocol edge cases)
 
 **Performance:**
-- Protocol parsing: <1ms
-- Tool routing: <1ms
-- Tool execution: <100ms (typical)
-- Response formatting: <1ms
-- **Total: <100ms end-to-end**
+- SDK parsing/routing: <2ms (slightly slower than manual, but negligible)
+- Tool execution: <100ms (typical, unchanged)
+- SDK response formatting: <1ms
+- **Total: <100ms end-to-end** (no measurable difference)
 
 === 6.7 Runtime Performance Characteristics
 

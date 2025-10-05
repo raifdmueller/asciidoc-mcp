@@ -83,9 +83,9 @@ LAYOUT_WITH_LEGEND()
 title Modular MCP Server Architecture (Actual Implementation)
 
 Container_Boundary(server, "MCP Documentation Server") {
-    Component(orchestrator, "MCPDocumentationServer", "mcp_server.py (202 lines)", "Thin orchestrator with dependency injection")
+    Component(orchestrator, "MCPDocumentationServer", "mcp_server.py (290 lines)", "Thin orchestrator with dependency injection")
     Component(doc_api, "DocumentAPI", "document_api.py (435 lines)", "All document operations")
-    Component(protocol, "ProtocolHandler", "protocol_handler.py (279 lines)", "MCP JSON-RPC protocol")
+    Component(fastmcp, "FastMCP SDK", "mcp.server.fastmcp", "MCP protocol handling via decorators")
     Component(webserver_mgr, "WebserverManager", "webserver_manager.py (121 lines)", "Web server lifecycle")
     Component(parser, "DocumentParser", "document_parser.py", "AsciiDoc/Markdown parsing")
     Component(editor, "ContentEditor", "content_editor.py", "File modification")
@@ -93,14 +93,14 @@ Container_Boundary(server, "MCP Documentation Server") {
 }
 
 Rel(orchestrator, doc_api, "delegates to", "get_structure(), search(), etc.")
-Rel(orchestrator, protocol, "uses for", "MCP request handling")
+Rel(orchestrator, fastmcp, "registers tools with", "@mcp.tool() decorators")
 Rel(orchestrator, webserver_mgr, "manages", "web server lifecycle")
 Rel(orchestrator, parser, "initializes", "at startup")
 Rel(orchestrator, editor, "provides to", "content modifications")
 Rel(orchestrator, watcher, "starts", "for auto-refresh")
 
 Rel(doc_api, orchestrator, "accesses state via", "self.server.sections")
-Rel(protocol, doc_api, "routes tools to", "tool implementations")
+Rel(fastmcp, doc_api, "routes tool calls to", "via global _server instance")
 Rel(webserver_mgr, orchestrator, "accesses", "server instance")
 @enduml
 ----
@@ -112,19 +112,19 @@ Rel(webserver_mgr, orchestrator, "accesses", "server instance")
 | Module | Responsibility | Key Methods | Lines
 
 | **mcp_server.py**
-| Server orchestration, initialization, delegation
-| `__init__()`, `cleanup()`, delegation methods
-| 202
+| Server orchestration, MCP tool registration
+| `__init__()`, `cleanup()`, `@mcp.tool()` decorators (10 tools), delegation methods
+| 290
 
 | **document_api.py**
 | All document operations
 | `get_structure()`, `get_section()`, `search_content()`, `get_metadata()`, `update_section_content()`, `insert_section()`
 | 435
 
-| **protocol_handler.py**
-| MCP protocol handling
-| `handle_mcp_request()` (routes initialize, tools/list, tools/call)
-| 279
+| **FastMCP SDK**
+| MCP protocol handling (external dependency)
+| `FastMCP()`, `mcp.run()`, automatic schema generation via type hints
+| mcp[cli]>=1.0.0
 
 | **webserver_manager.py**
 | Web server lifecycle
@@ -196,15 +196,15 @@ This pattern avoids circular dependencies while maintaining clear ownership.
 
 ==== Module Interactions
 
-**Typical MCP Request Flow:**
+**Typical MCP Request Flow (FastMCP SDK):**
 
-1. **MCP Client** → sends JSON-RPC request
-2. **protocol_handler.py** → `handle_mcp_request()` parses request
-3. **protocol_handler.py** → routes to appropriate tool
-4. **document_api.py** → executes tool (e.g., `get_structure()`)
-5. **document_api.py** → accesses `self.server.sections` (shared state)
-6. **protocol_handler.py** → formats response
-7. **MCP Client** → receives JSON-RPC response
+1. **MCP Client** → sends JSON-RPC request via stdin
+2. **FastMCP SDK** → `mcp.run()` receives and parses request
+3. **FastMCP SDK** → routes to decorated tool (e.g., `@mcp.tool() def get_structure()`)
+4. **Tool Function** → accesses `_server.doc_api.get_structure()` (global instance)
+5. **document_api.py** → executes business logic, accesses `self.server.sections` (shared state)
+6. **FastMCP SDK** → automatically serializes return value to JSON-RPC response
+7. **MCP Client** → receives JSON-RPC response via stdout
 
 **File Modification Flow:**
 
@@ -234,7 +234,7 @@ This pattern avoids circular dependencies while maintaining clear ownership.
 
 4. **Clear Ownership**
    - Document operations → document_api.py
-   - Protocol concerns → protocol_handler.py
+   - Protocol concerns → FastMCP SDK (external dependency, ADR-009)
    - Web server → webserver_manager.py
    - No ambiguity about "where does this code go?"
 
