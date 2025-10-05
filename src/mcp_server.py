@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 
-import json
 import sys
 from pathlib import Path
-from typing import Dict, Set
+from typing import Dict, Set, Optional
 from src.document_parser import DocumentParser
 from src.file_watcher import FileWatcher
 from src.content_editor import ContentEditor
 from src.diff_engine import DiffEngine
 from src.mcp.document_api import DocumentAPI
 from src.mcp.webserver_manager import WebserverManager
-from src.mcp.protocol_handler import handle_mcp_request
+from mcp.server.fastmcp import FastMCP
+
+# Initialize FastMCP server
+mcp = FastMCP("docs-server")
 
 class MCPDocumentationServer:
     def __init__(self, project_root: Path, enable_webserver: bool = True):
@@ -35,6 +37,10 @@ class MCPDocumentationServer:
         self._discover_root_files()
         self._parse_project()
         self.file_watcher.start()
+
+        # Start webserver after initialization (moved from protocol_handler.py:23)
+        if self.enable_webserver and not self.webserver.webserver_started:
+            self.webserver.start_webserver_thread()
 
     def cleanup(self):
         """Clean up resources and stop webserver"""
@@ -151,7 +157,96 @@ class MCPDocumentationServer:
         return self.webserver.restart_webserver()
 
 
+# Global server instance (initialized in main())
+_server: Optional[MCPDocumentationServer] = None
+
+
+# ============================================================================
+# MCP Tools - Registered with FastMCP decorators
+# ============================================================================
+
+@mcp.tool()
+def get_section(path: str) -> dict:
+    """Get specific section content"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.get_section(path)
+
+
+@mcp.tool()
+def get_metadata(path: str | None = None) -> dict:
+    """Get metadata for section or entire project"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.get_metadata(path)
+
+
+@mcp.tool()
+def get_sections(level: int) -> list:
+    """Get all sections at specific level"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.get_sections(level)
+
+
+@mcp.tool()
+def get_dependencies() -> dict:
+    """Get include tree and cross-references"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.get_dependencies()
+
+
+@mcp.tool()
+def validate_structure() -> dict:
+    """Validate document structure consistency"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.validate_structure()
+
+
+@mcp.tool()
+def refresh_index() -> dict:
+    """Refresh document index to detect new files"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.refresh_index()
+
+
+@mcp.tool()
+def get_structure(start_level: int = 1, parent_id: str | None = None) -> dict:
+    """Get sections at a specific hierarchy level (depth=1 to avoid token limits). Use start_level to navigate through levels progressively."""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.get_structure(start_level, parent_id)
+
+
+@mcp.tool()
+def search_content(query: str) -> list:
+    """Search for content in documentation"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.search_content(query)
+
+
+@mcp.tool()
+def update_section(path: str, content: str) -> bool:
+    """Update section content"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.update_section_content(path, content)
+
+
+@mcp.tool()
+def insert_section(parent_path: str, title: str, content: str, position: str = 'append') -> bool:
+    """Insert new section"""
+    if _server is None:
+        raise RuntimeError("Server not initialized")
+    return _server.doc_api.insert_section(parent_path, title, content, position)
+
+
 def main():
+    global _server
     import signal
     import atexit
 
@@ -164,7 +259,8 @@ def main():
         print(f"Project root does not exist: {project_root}", file=sys.stderr)
         sys.exit(1)
 
-    server = MCPDocumentationServer(project_root)
+    # Initialize server
+    _server = MCPDocumentationServer(project_root)
 
     # Setup signal handlers for graceful shutdown
     def signal_handler(signum, frame):
@@ -175,7 +271,7 @@ def main():
         with open(log_file, "a") as f:
             f.write(f"[{timestamp}] Signal {signum} received, cleaning up...\n")
 
-        server.cleanup()
+        _server.cleanup()
         sys.exit(0)
 
     # Register signal handlers
@@ -183,20 +279,11 @@ def main():
     signal.signal(signal.SIGINT, signal_handler)
 
     # Register atexit handler as backup
-    atexit.register(server.cleanup)
+    atexit.register(_server.cleanup)
 
-    # MCP protocol loop
-    for line in sys.stdin:
-        try:
-            request = json.loads(line.strip())
-            # Pass doc_api, webserver, and server to handle_mcp_request
-            response = handle_mcp_request(request, server.doc_api, server.webserver, server)
-            print(json.dumps(response))
-            sys.stdout.flush()
-        except json.JSONDecodeError:
-            print(json.dumps({'jsonrpc': '2.0', 'error': {'code': -32700, 'message': 'Parse error'}}))
-        except Exception as e:
-            print(json.dumps({'jsonrpc': '2.0', 'error': {'code': -32603, 'message': str(e)}}))
+    # Run FastMCP server (replaces manual stdin/stdout loop)
+    mcp.run()
+
 
 if __name__ == '__main__':
     main()
