@@ -67,7 +67,11 @@ class DocumentParser:
         section_stack = []
         current_content = []
         line_num = 0
-        
+
+        # Code block tracking (Issue #49)
+        in_code_block = False
+        code_block_delimiter = None
+
         # Convert to relative path for portability
         try:
             from pathlib import Path
@@ -75,12 +79,43 @@ class DocumentParser:
         except (ValueError, AttributeError):
             # If relative_to fails or root_path not set, use source_file as-is
             rel_source_file = source_file
-        
+
         for i, line in enumerate(lines):
+            stripped_line = line.strip()
+
+            # Track code block boundaries (Issue #49)
+            # Detect block attributes: [source,python], [plantuml], etc.
+            if stripped_line.startswith('[') and (
+                'source' in stripped_line or
+                'plantuml' in stripped_line or
+                'listing' in stripped_line
+            ):
+                # Next delimiter will start a code block
+                current_content.append(line)
+                continue
+
+            # Detect code block delimiters: ----, ...., etc.
+            if stripped_line in ['----', '....', '====', '****']:
+                if in_code_block and stripped_line == code_block_delimiter:
+                    # Exit code block
+                    in_code_block = False
+                    code_block_delimiter = None
+                elif not in_code_block:
+                    # Enter code block
+                    in_code_block = True
+                    code_block_delimiter = stripped_line
+                current_content.append(line)
+                continue
+
+            # Skip header parsing if inside code block (Issue #49)
+            if in_code_block:
+                current_content.append(line)
+                continue
+
             # AsciiDoc headers: = Title, == Title, etc.
             # Markdown headers: # Title, ## Title, etc.
-            header_match = re.match(r'^(=+|#+)\s+(.+)$', line.strip())
-            
+            header_match = re.match(r'^(=+|#+)\s+(.+)$', stripped_line)
+
             if header_match:
                 # Save previous section content
                 if section_stack:
