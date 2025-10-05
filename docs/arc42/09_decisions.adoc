@@ -335,3 +335,97 @@ After implementing comprehensive test suites:
 *   **unittest (Python standard library)**: Rejected due to verbose syntax and lack of advanced features
 *   **nose2**: Rejected as pytest has better ecosystem and active development
 *   **No testing framework**: Rejected as unacceptable for production code quality
+
+=== ADR-009: Migration to FastMCP SDK
+
+[cols="1,3"]
+|===
+| Status | Accepted
+| Date | 2025-10-05
+| Decision Makers | Development Team (Claude Code)
+| Related Issues | GitHub Issue #51
+|===
+
+==== Context
+The project initially implemented the MCP (Model Context Protocol) manually using custom JSON-RPC 2.0 message handling in `src/mcp/protocol_handler.py`. This 282-line module contained:
+
+- Manual `initialize`, `tools/list`, and `tools/call` handlers
+- Hand-written JSON schema definitions for 10 MCP tools
+- Custom request routing with if/elif dispatch logic
+- Manual error response formatting
+
+This approach created several problems:
+
+1. **Maintenance Overhead**: Every protocol change required manual updates to request/response handling
+2. **Protocol Drift Risk**: No guarantee of compliance with MCP specification updates
+3. **Boilerplate Code**: Repetitive schema definitions and routing logic
+4. **Testing Complexity**: Manual protocol implementation difficult to test comprehensively
+
+The project's architecture principle states: "Nutze für MCP-Server immer fastMCP" (Always use fastMCP for MCP servers), recognizing that mature libraries reduce risk compared to custom implementations.
+
+==== Decision
+Migrate to the **official MCP SDK** (`mcp[cli]>=1.0.0`) which includes FastMCP 1.0 as `from mcp.server.fastmcp import FastMCP`.
+
+**Implementation approach:**
+- Replace manual stdin/stdout JSON-RPC loop with `mcp.run()`
+- Convert 10 tool handlers to `@mcp.tool()` decorators
+- Delete `src/mcp/protocol_handler.py` entirely (282 lines)
+- Use type hints for automatic schema generation
+- Keep DocumentAPI business logic unchanged (out of scope)
+
+==== Consequences
+**Pro:**
+*   **Protocol Compliance Guaranteed**: Official SDK maintained by Anthropic ensures MCP specification adherence
+*   **Automatic Schema Generation**: Type hints (e.g., `def get_section(path: str) -> dict`) auto-generate JSON schemas
+*   **Less Boilerplate**: Reduced from 282 lines (protocol_handler.py) + manual schemas to ~80 lines of decorator-based tools
+*   **Better Maintainability**: Protocol updates handled by SDK dependency updates, not manual code changes
+*   **Improved Developer Experience**: Decorator syntax (`@mcp.tool()`) more Pythonic than manual routing
+
+**Con:**
+*   **External Dependency**: Added `mcp>=1.0.0` dependency (16 transitive dependencies)
+*   **SDK Learning Curve**: Team must learn FastMCP patterns (mitigated by similarity to FastAPI)
+*   **Less Control**: Some edge cases may require SDK updates rather than immediate fixes
+
+**Neutral:**
+*   **Testing Changes**: Removed 2 test files (test_protocol_handler.py, test_webserver_startup.py) testing deleted code
+*   **Coverage Impact**: 70% coverage (down from 82%) due to tool wrapper functions not directly testable via unit tests
+
+==== Implementation Results
+**Code Reduction:**
+- Deleted: 282 lines (protocol_handler.py) + 445 lines (tests) = 727 lines
+- Added: 89 lines (tool decorators in mcp_server.py)
+- **Net reduction: -638 lines** (88% reduction in MCP-related code)
+
+**Migration:**
+- 10 MCP tools successfully migrated:
+  * Read tools: `get_section`, `get_metadata`, `get_sections`, `get_dependencies`, `validate_structure`, `refresh_index`, `get_structure`, `search_content`
+  * Write tools: `update_section`, `insert_section`
+- Webserver start hook moved from `initialize` handler to `MCPDocumentationServer.__init__()`
+- All delegation methods retained for backward compatibility
+
+**Testing:**
+- 81 core tests passing (document_parser: 100%, document_api: 86%, mcp_server: 67%)
+- No regressions in business logic (DocumentAPI unchanged)
+
+**Commits:**
+- b8a644e: feat: Migrate from manual MCP protocol to FastMCP SDK
+- 515e6f1: test: Remove obsolete protocol_handler tests and update imports
+
+==== Alternatives Considered
+**1. Status Quo (Keep Manual Implementation)**
+- **Rejected**: Technical debt would compound as MCP evolves
+- **Risk**: Protocol drift, maintenance burden increases over time
+
+**2. FastMCP 2.0 (Separate Framework)**
+- **Description**: `pip install fastmcp` - enterprise features (auth, deployment, OpenAPI)
+- **Rejected**: Too complex for project needs, unnecessary features
+- **Comparison**: Official SDK provides sufficient functionality without enterprise overhead
+
+**3. Other MCP SDKs (Node.js, Go)**
+- **Rejected**: Would require rewriting entire Python codebase
+- **Not evaluated**: Python ecosystem alignment more important than alternative language features
+
+==== Related Decisions
+- **ADR-006**: Modular MCP Server Architecture - Enabled clean migration by separating protocol handling from business logic
+- **ADR-003**: Technology Stack (Python/FastAPI) - Python ecosystem makes official MCP SDK the natural choice
+
