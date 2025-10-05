@@ -239,14 +239,11 @@ class DocumentAPI:
             # If no direct sections found, check if this is an aggregator file
             # (file that only contains includes, like docs/arc42.adoc)
             if not file_sections:
-                # Get the directory path of this file (e.g., "docs/arc42/")
-                file_dir = str(root_file.parent / root_file.stem)
-
-                # Look for sections from files in the same-named subdirectory
-                # e.g., docs/arc42.adoc -> docs/arc42/*.adoc
+                # For aggregator files, include all sections that belong to this file
+                # This handles the case where includes are resolved but source_file still points to the aggregator
                 for section_id, section in self.server.sections.items():
-                    # Check if section comes from a subdirectory file
-                    if file_dir in section.source_file and section.source_file != abs_path:
+                    # Check if section comes from this specific file
+                    if section.source_file == rel_path:
                         # Collect ALL sections from included files to build complete hierarchy
                         children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
 

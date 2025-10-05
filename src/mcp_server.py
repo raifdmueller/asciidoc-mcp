@@ -9,7 +9,7 @@ from src.content_editor import ContentEditor
 from src.diff_engine import DiffEngine
 from src.mcp.document_api import DocumentAPI
 from src.mcp.webserver_manager import WebserverManager
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 # Initialize FastMCP server
 mcp = FastMCP("docs-server")
@@ -67,7 +67,7 @@ class MCPDocumentationServer:
         # Directories to exclude from search
         exclude_dirs = {'.venv', 'venv', '.git', '.pytest_cache', '__pycache__',
                        'node_modules', '.tox', '.mypy_cache', '.ruff_cache',
-                       '.amazonq', '.serena', '.vibe'}
+                       '.amazonq', '.serena', '.vibe', 'build'}
 
         # Extended patterns for AsciiDoc and Markdown files (recursive search)
         patterns = ['**/*.adoc', '**/*.ad', '**/*.asciidoc', '**/*.md', '**/*.markdown']
