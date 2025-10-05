@@ -1,21 +1,29 @@
-= MCP Documentation Server: Architecture Documentation
 :toc: left
 :toclevels: 3
 :icons: font
 :numbered:
 :doctype: book
 :imagesdir: images
-:plantuml-server-url: http://www.plantuml.com/plantuml
+:sectnums!:
+:chapter-label:
 
+= MCP Documentation Server: Architecture Documentation
+:author: Claude Code
 // Document metadata
 :revnumber: 2.0
 :revdate: {docdate}
-:revremark: Production-ready implementation with mental model documentation
+:revremark: WIP
 
 // arc42 Architecture Documentation
 //
 // This document follows the arc42 template for architecture documentation.
 // See https://arc42.org for more information about arc42.
+
+:diagram-server-url: https://kroki.io/
+:diagram-server-type: kroki_io
+
+:kroki-server-url: https://kroki.io/
+:diagram-server-type: kroki_io
 
 // Include all chapters in order
 include::arc42/01_introduction.adoc[]
