@@ -46,6 +46,7 @@ jobs:
 
       - name: Run tests and generate HTML coverage report
         run: |
+          export PYTHONPATH=$PYTHONPATH:.
           pytest --cov=src --cov-report=html --cov-report=xml -v
         continue-on-error: true
         
