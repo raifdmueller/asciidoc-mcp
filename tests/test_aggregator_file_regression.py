@@ -35,9 +35,9 @@ class TestAggregatorFileRegressionFix:
         # Ensure we found the file
         assert arc42_file is not None, "docs/arc42.adoc should be found in file structure"
         
-        # Check that it has multiple sections (not just 1)
+        # Check that it has sections (should have 1 root section with many children)
         sections = arc42_file.get('sections', [])
-        assert len(sections) > 1, f"docs/arc42.adoc should have multiple sections, found {len(sections)}"
+        assert len(sections) >= 1, f"docs/arc42.adoc should have at least one section, found {len(sections)}"
         
         # Count all sections recursively (including children)
         def count_all_sections(sections_list):
