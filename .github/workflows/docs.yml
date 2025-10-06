@@ -53,10 +53,18 @@ jobs:
       - name: Create test-reports directory for GitHub Pages
         run: |
           mkdir -p build/microsite/output/test-reports
+          echo "Current directory contents:"
+          ls -la
+          echo "Looking for htmlcov directory..."
           if [ -d "htmlcov" ]; then
+            echo "Found htmlcov directory, copying to test-reports..."
             cp -r htmlcov build/microsite/output/test-reports/
+            echo "Copy completed. Contents of test-reports:"
+            ls -la build/microsite/output/test-reports/
           else
             echo "Warning: htmlcov directory not found, skipping coverage report copy"
+            echo "Available files and directories:"
+            find . -name "*cov*" -o -name "*html*" | head -10
           fi
           
       - name: Download dtcw wrapper
