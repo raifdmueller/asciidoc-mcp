@@ -44,7 +44,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run tests and prepare coverage reports for deployment
+      - name: Run tests and generate coverage reports
         run: |
           export PYTHONPATH=$PYTHONPATH:.
           
@@ -52,28 +52,17 @@ jobs:
           echo "Running pytest with coverage..."
           pytest --cov=src --cov-report=html --cov-report=xml -v || true
           
-          # Ensure test-reports directory exists
-          mkdir -p build/microsite/output/test-reports
-          
-          # Copy coverage reports immediately after generation
+          # Keep coverage reports in project root for later copy
           echo "Checking for generated coverage reports..."
           if [ -d "htmlcov" ]; then
-            echo "Found htmlcov directory, copying to test-reports..."
-            cp -r htmlcov build/microsite/output/test-reports/
-            echo "Coverage reports copied successfully."
-            echo "Contents of test-reports directory:"
-            ls -la build/microsite/output/test-reports/
-            echo "Contents of htmlcov directory:"
-            ls -la build/microsite/output/test-reports/htmlcov/ | head -5
+            echo "Found htmlcov directory, keeping for later deployment"
+            ls -la htmlcov/ | head -5
           else
             echo "ERROR: htmlcov directory not found after pytest execution"
             echo "Current directory contents:"
             ls -la
             echo "Searching for coverage-related files:"
             find . -name "*cov*" -o -name "*html*" | head -10
-            # Create a fallback index page to help debug
-            mkdir -p build/microsite/output/test-reports/htmlcov
-            echo "<html><body><h1>Coverage reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/htmlcov/index.html
           fi
           
       - name: Download dtcw wrapper
@@ -86,6 +75,28 @@ jobs:
 
       - name: Generate site
         run: ./dtcw generateSite
+
+      - name: Copy coverage reports after site generation
+        run: |
+          # Ensure test-reports directory exists after generateSite
+          mkdir -p build/microsite/output/test-reports
+          
+          # Copy coverage reports to final deployment directory
+          echo "Copying coverage reports to deployment directory..."
+          if [ -d "htmlcov" ]; then
+            echo "Found htmlcov directory, copying to test-reports..."
+            cp -r htmlcov build/microsite/output/test-reports/
+            echo "Coverage reports copied successfully."
+            echo "Contents of test-reports directory:"
+            ls -la build/microsite/output/test-reports/
+            echo "Contents of htmlcov directory:"
+            ls -la build/microsite/output/test-reports/htmlcov/ | head -5
+          else
+            echo "WARNING: htmlcov directory not found, creating fallback"
+            # Create a fallback index page to help debug
+            mkdir -p build/microsite/output/test-reports/htmlcov
+            echo "<html><body><h1>Coverage reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/htmlcov/index.html
+          fi
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
