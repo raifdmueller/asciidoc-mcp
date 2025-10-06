@@ -151,6 +151,13 @@
         }
         .section-title:hover { background-color: #e9ecef; }
         .section-title.selected { background-color: #007acc; color: white; }
+        
+        /* Highlighted section line in CodeMirror */
+        .CodeMirror-line.highlighted-section {
+            background-color: #fff3cd !important;
+            border-left: 4px solid #007acc;
+            padding-left: 8px;
+        }
 
         .section-title-text {
             flex: 1;
@@ -666,7 +673,8 @@
             rightContent.innerHTML = '<div class="loading">Loading content...</div>';
 
             try {
-                const response = await fetch(`/api/section/${sectionId}`);
+                // Use enhanced API with full document context
+                const response = await fetch(`/api/section/${sectionId}?context=full`);
                 const data = await response.json();
 
                 // Clean up existing CodeMirror instance BEFORE clearing DOM
@@ -677,14 +685,37 @@
                 // Now it's safe to clear the DOM
                 rightContent.innerHTML = '';
 
+                // Use full document content if available, otherwise fall back to section content
+                const content = data.full_content || data.content || 'No content available';
+
                 currentEditor = CodeMirror(rightContent, {
-                    value: data.content || 'No content available',
+                    value: content,
                     mode: 'text/plain',
                     readOnly: true,
                     lineNumbers: true,
                     lineWrapping: true,
                     theme: 'default'
                 });
+
+                // Auto-scroll to the selected section if we have position metadata
+                if (data.section_position && data.full_content) {
+                    const { line_start } = data.section_position;
+                    // Scroll to the section with a small delay to ensure CodeMirror is fully initialized
+                    setTimeout(() => {
+                        if (currentEditor) {
+                            // Convert 0-based line to CodeMirror line (also 0-based)
+                            const targetLine = Math.max(0, line_start);
+                            currentEditor.scrollIntoView({line: targetLine, ch: 0}, 200);
+                            // Optionally highlight the line temporarily
+                            const lineHandle = currentEditor.addLineClass(targetLine, 'background', 'highlighted-section');
+                            setTimeout(() => {
+                                if (lineHandle) {
+                                    currentEditor.removeLineClass(lineHandle, 'background', 'highlighted-section');
+                                }
+                            }, 2000); // Remove highlight after 2 seconds
+                        }
+                    }, 100);
+                }
 
             } catch (error) {
                 console.error('Error loading section content:', error);

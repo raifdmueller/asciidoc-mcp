@@ -53,6 +53,36 @@ async def validate_structure():
     
     return doc_server.validate_structure()
 
+def _build_base_section_response(section) -> dict:
+    """Build the base section response with common fields"""
+    return {
+        'id': section.id,
+        'title': section.title,
+        'level': section.level,
+        'content': section.content,
+        'children': section.children,
+        'source_file': section.source_file,
+        'line_start': section.line_start,
+        'line_end': section.line_end
+    }
+
+def _add_full_document_context(response: dict, section) -> None:
+    """Add full document content and position metadata to response"""
+    source_file_path = Path(section.source_file)
+    if not source_file_path.exists():
+        return
+    
+    try:
+        full_content = source_file_path.read_text(encoding='utf-8')
+        response['full_content'] = full_content
+        response['section_position'] = {
+            'line_start': section.line_start,
+            'line_end': section.line_end
+        }
+    except (OSError, UnicodeDecodeError) as e:
+        # Log error but don't fail the request - continue without full content
+        pass
+
 @app.get("/api/section/{section_id:path}")
 async def get_section(section_id: str, context: str = "section"):
     """Get specific section with optional full document context"""
@@ -63,32 +93,10 @@ async def get_section(section_id: str, context: str = "section"):
         raise HTTPException(status_code=404, detail="Section not found")
 
     section = doc_server.sections[section_id]
+    response = _build_base_section_response(section)
     
-    # Base response (backward compatible)
-    response = {
-        'id': section.id,
-        'title': section.title,
-        'level': section.level,
-        'content': section.content,
-        'children': section.children,
-        'source_file': section.source_file,
-        'line_start': section.line_start,
-        'line_end': section.line_end
-    }
-    
-    # Enhanced response for context=full
     if context == "full":
-        # Get the full document content
-        source_file_path = Path(section.source_file)
-        if source_file_path.exists():
-            full_content = source_file_path.read_text(encoding='utf-8')
-            response['full_content'] = full_content
-            
-            # Add section position metadata for scrolling
-            response['section_position'] = {
-                'line_start': section.line_start,
-                'line_end': section.line_end
-            }
+        _add_full_document_context(response, section)
     
     return response
 
