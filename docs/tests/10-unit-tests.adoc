@@ -11,9 +11,28 @@ Dieser Report zeigt die Ergebnisse der automatisierten Unit-Tests und Code-Cover
 
 == Test-Ergebnisse
 
-Die Tests werden mit pytest ausgeführt und generieren detaillierte HTML-Reports mit Coverage-Informationen.
+Die Tests werden mit pytest ausgeführt und generieren detaillierte HTML-Reports mit Test-Ergebnissen und Coverage-Informationen.
 
-**Direkter Link zum HTML-Report**: link:../test-reports/htmlcov/index.html[Coverage Report öffnen^]
+**Direkte Links zu den Reports**:
+
+* link:../test-reports/pytest-report.html[Unit Test Report öffnen^]
+* link:../test-reports/htmlcov/index.html[Coverage Report öffnen^]
+
+=== Interaktiver Unit Test Report
+
+++++
+<div style="border: 1px solid #ccc; margin: 10px 0;">
+<iframe src="../test-reports/pytest-report.html" 
+        width="100%" 
+        height="800px" 
+        frameborder="0"
+        style="display: block;">
+  <p>Ihr Browser unterstützt keine iframes. 
+     <a href="../test-reports/pytest-report.html" target="_blank">
+     Öffnen Sie den Unit Test Report direkt</a>.</p>
+</iframe>
+</div>
+++++
 
 === Interaktiver Coverage-Report
 
