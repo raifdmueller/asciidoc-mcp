@@ -54,8 +54,8 @@ async def validate_structure():
     return doc_server.validate_structure()
 
 @app.get("/api/section/{section_id:path}")
-async def get_section(section_id: str):
-    """Get specific section"""
+async def get_section(section_id: str, context: str = "section"):
+    """Get specific section with optional full document context"""
     if not doc_server:
         raise HTTPException(status_code=500, detail="Server not initialized")
 
@@ -63,7 +63,9 @@ async def get_section(section_id: str):
         raise HTTPException(status_code=404, detail="Section not found")
 
     section = doc_server.sections[section_id]
-    return {
+    
+    # Base response (backward compatible)
+    response = {
         'id': section.id,
         'title': section.title,
         'level': section.level,
@@ -73,6 +75,22 @@ async def get_section(section_id: str):
         'line_start': section.line_start,
         'line_end': section.line_end
     }
+    
+    # Enhanced response for context=full
+    if context == "full":
+        # Get the full document content
+        source_file_path = Path(section.source_file)
+        if source_file_path.exists():
+            full_content = source_file_path.read_text(encoding='utf-8')
+            response['full_content'] = full_content
+            
+            # Add section position metadata for scrolling
+            response['section_position'] = {
+                'line_start': section.line_start,
+                'line_end': section.line_end
+            }
+    
+    return response
 
 def init_server(project_root: Path):
     """Initialize the documentation server"""

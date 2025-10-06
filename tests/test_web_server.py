@@ -172,6 +172,52 @@ Content for section 2.
         
         self.assertEqual(response.status_code, 404)
     
+    def test_api_section_with_context_full_returns_complete_document(self):
+        """Test /api/section/{section_id}?context=full returns full document with section metadata"""
+        # First get structure to find a section
+        structure_response = self.client.get("/api/structure")
+        structure = structure_response.json()
+        
+        if structure:
+            # Find the first actual section (not document root)
+            doc_data = list(structure.values())[0]
+            sections = doc_data.get('sections', [])
+            if sections and sections[0].get('children'):
+                section_id = sections[0]['children'][0]['id']  # test-document.section-1
+            else:
+                section_id = sections[0]['id'] if sections else None
+            
+            # Test new context=full parameter
+            response = self.client.get(f"/api/section/{section_id}?context=full")
+            
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            
+            # Should contain section metadata
+            self.assertIn('id', data)
+            self.assertIn('title', data)
+            self.assertIn('level', data)
+            
+            # NEW: Should contain full document content instead of just section content
+            self.assertIn('full_content', data)
+            self.assertIn('section_position', data)
+            
+            # Full content should contain the complete document
+            full_content = data['full_content']
+            self.assertIn('= Test Document', full_content)  # Document title
+            self.assertIn('== Section 1', full_content)    # First section
+            self.assertIn('== Section 2', full_content)    # Second section
+            
+            # Section position should provide scroll metadata
+            section_position = data['section_position']
+            self.assertIn('line_start', section_position)
+            self.assertIn('line_end', section_position)
+            self.assertIsInstance(section_position['line_start'], int)
+            self.assertIsInstance(section_position['line_end'], int)
+            
+            # Backward compatibility: should still have individual section content
+            self.assertIn('content', data)
+    
     def test_web_interface_expandable_hierarchy(self):
         """Test that web interface HTML supports expandable hierarchy"""
         response = self.client.get("/")
