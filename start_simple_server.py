@@ -38,30 +38,48 @@ async def get_structure():
     
     structure = {}
     
-    # Group sections by source file
-    files_sections = {}
-    for section in parser.sections.values():
-        source_file = section.source_file
-        if source_file not in files_sections:
-            files_sections[source_file] = []
-        files_sections[source_file].append(section)
+    def get_included_files_set(parser):
+        """Extract included files as a normalized set of paths."""
+        included_files_set = set()
+        if hasattr(parser, 'included_files'):
+            for included_file in parser.included_files:
+                included_files_set.add(str(Path(included_file)))
+        return included_files_set
     
-    # Build file-based structure
-    for source_file, sections_list in files_sections.items():
-        # Convert absolute paths to relative paths for display
-        try:
-            rel_path = str(Path(source_file).relative_to(parser.project_root))
-        except ValueError:
-            rel_path = source_file
+    def identify_root_files(parser, included_files_set):
+        """Identify root files that are not included by other files."""
+        all_source_files = set(section.source_file for section in parser.sections.values())
+        root_files = []
         
-        # Sort sections by line_start to maintain document order
-        sections_list.sort(key=lambda s: s.line_start)
+        for source_file in all_source_files:
+            abs_source = str(Path(source_file))
+            is_included = any(abs_source == included or source_file == included 
+                            for included in included_files_set)
+            if not is_included:
+                root_files.append(source_file)
         
-        # Build hierarchical structure for sections within this file
+        return root_files
+    
+    def collect_sections_for_root_file(parser, root_file, root_files):
+        """Collect all sections belonging to a root file (including from includes)."""
+        file_sections = []
+        
+        for section in parser.sections.values():
+            if root_file == section.source_file:
+                # Direct sections from the root file
+                file_sections.append(section)
+            elif len(root_files) == 1:
+                # Single root file means it's an aggregator - include all sections
+                file_sections.append(section)
+        
+        return sorted(file_sections, key=lambda s: s.line_start)
+    
+    def build_section_hierarchy(file_sections):
+        """Build hierarchical structure for sections within a file."""
         section_map = {}
         root_sections = []
         
-        for section in sections_list:
+        for section in file_sections:
             section_data = {
                 'title': section.title,
                 'level': section.level,
@@ -74,26 +92,43 @@ async def get_structure():
             }
             section_map[section.id] = section_data
             
-            # Determine parent within same file using dot notation
+            # Determine parent using dot notation hierarchy
             if '.' in section.id:
                 parent_id = '.'.join(section.id.split('.')[:-1])
                 if parent_id in section_map:
                     section_map[parent_id]['children'].append(section_data)
                 else:
-                    # Parent not in same file, treat as root-level
                     root_sections.append(section_data)
             else:
-                # Top-level section
                 root_sections.append(section_data)
         
+        return root_sections
+    
+    # Main aggregator file handling logic
+    included_files_set = get_included_files_set(parser)
+    root_files = identify_root_files(parser, included_files_set)
+    
+    # Process each root file to build the structure
+    for root_file in root_files:
+        # Get relative path for display
+        try:
+            rel_path = str(Path(root_file).relative_to(parser.project_root))
+        except ValueError:
+            rel_path = root_file
+        
+        file_sections = collect_sections_for_root_file(parser, root_file, root_files)
+        if not file_sections:
+            continue
+        
+        root_sections = build_section_hierarchy(file_sections)
+        
         # Create file entry (matches the expected structure from document_api.py)
-        if sections_list:  # Only add files that have sections
-            structure[rel_path] = {
-                'filename': Path(source_file).name,
-                'path': rel_path,
-                'section_count': len(sections_list),
-                'sections': root_sections
-            }
+        structure[rel_path] = {
+            'filename': Path(root_file).name,
+            'path': rel_path,
+            'section_count': len(file_sections),
+            'sections': root_sections
+        }
     
     return JSONResponse(structure)
 
