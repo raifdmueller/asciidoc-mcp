@@ -49,14 +49,14 @@ jobs:
           pytest --cov=src --cov-report=html --cov-report=xml -v
         continue-on-error: true
         
-       - name: Create test-reports directory for GitHub Pages
-         run: |
-           mkdir -p build/microsite/output/test-reports
-           if [ -d "htmlcov" ]; then
-             cp -r htmlcov build/microsite/output/test-reports/
-           else
-             echo "Warning: htmlcov directory not found, skipping coverage report copy"
-           fi
+      - name: Create test-reports directory for GitHub Pages
+        run: |
+          mkdir -p build/microsite/output/test-reports
+          if [ -d "htmlcov" ]; then
+            cp -r htmlcov build/microsite/output/test-reports/
+          else
+            echo "Warning: htmlcov directory not found, skipping coverage report copy"
+          fi
           
       - name: Download dtcw wrapper
         run: |
