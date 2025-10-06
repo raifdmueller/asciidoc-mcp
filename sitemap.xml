@@ -2,6 +2,31 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
     <url>
+    	<loc>http://jbake.org/tests/test-index.html</loc>
+    	<lastmod>2025-10-06</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/tests/30-manual-tests.html</loc>
+    	<lastmod>2025-10-06</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/tests/10-unit-tests.html</loc>
+    	<lastmod>2025-10-06</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/tests/README.html</loc>
+    	<lastmod>2025-10-06</lastmod>
+    </url>
+
+    <url>
+    	<loc>http://jbake.org/tests/20-coverage-report.html</loc>
+    	<lastmod>2025-10-06</lastmod>
+    </url>
+
+    <url>
     	<loc>http://jbake.org/arc42/02_constraints.html</loc>
     	<lastmod>2025-10-06</lastmod>
     </url>
