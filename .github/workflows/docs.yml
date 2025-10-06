@@ -96,7 +96,14 @@ jobs:
             # Create a fallback index page to help debug
             mkdir -p build/microsite/output/test-reports/htmlcov
             echo "<html><body><h1>Coverage reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/htmlcov/index.html
-          fi
+           fi
+
+      - name: Remove coverage .gitignore files before deployment
+        run: |
+          # Remove .gitignore files created by coverage.py that prevent Git from seeing the files
+          echo "Removing .gitignore files that block coverage report deployment..."
+          find build/microsite/output/test-reports -name ".gitignore" -delete -print || true
+          echo "Gitignore files removed."
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
