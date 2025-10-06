@@ -6,9 +6,16 @@ Handles all document structure, sections, metadata, and search operations.
 
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from src.document_parser import Section
-from src.content_editor import ContentEditor
-from src.diff_engine import DiffEngine
+
+try:
+    from src.document_parser import Section
+    from src.content_editor import ContentEditor
+    from src.diff_engine import DiffEngine
+except ImportError:
+    # Fallback for when run as script without src module in path
+    from document_parser import Section
+    from content_editor import ContentEditor
+    from diff_engine import DiffEngine
 import os
 import re
 

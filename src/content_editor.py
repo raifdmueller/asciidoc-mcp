@@ -1,6 +1,11 @@
 from pathlib import Path
 from typing import Dict, Optional, List
-from .document_parser import Section
+
+try:
+    from .document_parser import Section
+except ImportError:
+    # Fallback for when run as script without src module in path
+    from document_parser import Section
 
 class ContentEditor:
     def __init__(self, project_root: Path):

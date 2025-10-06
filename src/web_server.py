@@ -100,10 +100,15 @@ async def get_section(section_id: str, context: str = "section"):
     
     return response
 
-def init_server(project_root: Path):
+def init_server(project_root: Path):  
     """Initialize the documentation server"""
     global doc_server
-    from .mcp_server import MCPDocumentationServer
+    try:
+        # Try relative import first (when used as module)
+        from .mcp_server import MCPDocumentationServer
+    except ImportError:
+        # Fall back to absolute import (when run as script)
+        from mcp_server import MCPDocumentationServer
     doc_server = MCPDocumentationServer(project_root, enable_webserver=False)
 
 if __name__ == "__main__":

@@ -3,12 +3,22 @@
 import sys
 from pathlib import Path
 from typing import Dict, Set, Optional
-from src.document_parser import DocumentParser
-from src.file_watcher import FileWatcher
-from src.content_editor import ContentEditor
-from src.diff_engine import DiffEngine
-from src.mcp.document_api import DocumentAPI
-from src.mcp.webserver_manager import WebserverManager
+
+try:
+    from src.document_parser import DocumentParser
+    from src.file_watcher import FileWatcher
+    from src.content_editor import ContentEditor
+    from src.diff_engine import DiffEngine
+    from src.mcp.document_api import DocumentAPI
+    from src.mcp.webserver_manager import WebserverManager
+except ImportError:
+    # Fallback for when run as script without src module in path
+    from document_parser import DocumentParser
+    from file_watcher import FileWatcher
+    from content_editor import ContentEditor
+    from diff_engine import DiffEngine
+    from mcp.document_api import DocumentAPI
+    from mcp.webserver_manager import WebserverManager
 from fastmcp import FastMCP
 
 # Initialize FastMCP server

@@ -97,6 +97,106 @@ Insert new section relative to existing section.
 }
 ```
 
+## Web API Endpoints
+
+The server provides REST API endpoints for the web interface and external integration:
+
+### Navigation Endpoints
+
+#### `GET /api/structure`
+Get complete document structure with files and sections.
+```bash
+curl http://localhost:8080/api/structure
+```
+
+Response:
+```json
+{
+  "document.adoc": {
+    "file_info": {...},
+    "sections": [...]
+  }
+}
+```
+
+#### `GET /api/section/{section_id}`
+Get specific section content with optional full document context.
+
+**Parameters:**
+- `context`: Optional parameter controlling response format
+  - `"section"` (default): Returns only the specific section content
+  - `"full"`: Returns the complete document with section positioning metadata
+
+**Basic usage:**
+```bash
+curl http://localhost:8080/api/section/document.section-1
+```
+
+**Enhanced usage (Issue #57):**
+```bash
+curl http://localhost:8080/api/section/document.section-1?context=full
+```
+
+**Response formats:**
+
+*Standard response (`context=section`):*
+```json
+{
+  "id": "document.section-1",
+  "title": "Section Title",
+  "level": 2,
+  "content": "Section content only...",
+  "children": [...],
+  "source_file": "/path/to/document.adoc",
+  "line_start": 10,
+  "line_end": 25
+}
+```
+
+*Full context response (`context=full`):*
+```json
+{
+  "id": "document.section-1",
+  "title": "Section Title", 
+  "level": 2,
+  "content": "Section content only...",
+  "children": [...],
+  "source_file": "/path/to/document.adoc",
+  "line_start": 10,
+  "line_end": 25,
+  "full_content": "Complete document content...",
+  "section_position": {
+    "line_start": 10,
+    "line_end": 25
+  }
+}
+```
+
+The `context=full` parameter enables advanced navigation features:
+- **Complete document view**: Shows the section within its full document context
+- **Auto-scrolling**: Frontend can use `section_position` to scroll to the specific section
+- **Section highlighting**: Visual emphasis of the selected section within the document
+
+### Metadata Endpoints
+
+#### `GET /api/metadata`
+Get project metadata and document information.
+```bash
+curl http://localhost:8080/api/metadata
+```
+
+#### `GET /api/dependencies`
+Get document include dependencies and cross-references.
+```bash
+curl http://localhost:8080/api/dependencies
+```
+
+#### `GET /api/validate`
+Validate document structure consistency.
+```bash
+curl http://localhost:8080/api/validate
+```
+
 ## Path Notation
 
 Sections are accessed using dot notation:
