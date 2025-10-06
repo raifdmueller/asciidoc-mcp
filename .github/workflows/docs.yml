@@ -40,16 +40,16 @@ jobs:
         with:
           python-version: '3.12'
 
-       - name: Install Python dependencies
-         run: |
-           pip install -r requirements.txt
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
 
-       - name: Run tests and generate coverage reports
-         run: |
-           export PYTHONPATH=$PYTHONPATH:.
-           pytest --cov=src --cov-report=html --cov-report=xml --html=pytest-report.html --self-contained-html -v || true
-           
-       - name: Download dtcw wrapper
+      - name: Run tests and generate coverage reports
+        run: |
+          export PYTHONPATH=$PYTHONPATH:.
+          pytest --cov=src --cov-report=html --cov-report=xml --html=pytest-report.html --self-contained-html -v || true
+          
+      - name: Download dtcw wrapper
         run: |
           curl -Lo dtcw https://doctoolchain.org/dtcw
           chmod +x dtcw
@@ -57,30 +57,26 @@ jobs:
       - name: Install docToolchain
         run: ./dtcw local install doctoolchain
 
-       - name: Generate site
-         run: ./dtcw generateSite
+      - name: Generate site
+        run: ./dtcw generateSite
 
-       - name: Copy test reports after site generation
-         run: |
-           mkdir -p build/microsite/output/test-reports
-           
-           # Copy coverage reports
-           if [ -d "htmlcov" ]; then
-             cp -r htmlcov build/microsite/output/test-reports/
-           else
-             mkdir -p build/microsite/output/test-reports/htmlcov
-             echo "<html><body><h1>Coverage reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/htmlcov/index.html
-           fi
-           
-           # Copy unit test reports
-           if [ -f "pytest-report.html" ]; then
-             cp pytest-report.html build/microsite/output/test-reports/
-           else
-             echo "<html><body><h1>Unit test reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/pytest-report.html
-           fi
+      - name: Copy test reports after site generation
+        run: |
+          mkdir -p build/microsite/output/test-reports
+          if [ -d "htmlcov" ]; then
+            cp -r htmlcov build/microsite/output/test-reports/
+          else
+            mkdir -p build/microsite/output/test-reports/htmlcov
+            echo "<html><body><h1>Coverage reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/htmlcov/index.html
+          fi
+          if [ -f "pytest-report.html" ]; then
+            cp pytest-report.html build/microsite/output/test-reports/
+          else
+            echo "<html><body><h1>Unit test report not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/pytest-report.html
+          fi
 
-       - name: Remove test report .gitignore files before deployment
-         run: |
+      - name: Remove coverage .gitignore files before deployment
+        run: |
            # Remove .gitignore files created by coverage.py that prevent Git from seeing the files
            find build/microsite/output/test-reports -name ".gitignore" -delete || true
 
