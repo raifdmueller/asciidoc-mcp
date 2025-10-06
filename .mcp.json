@@ -14,7 +14,7 @@
       ]
     },
     "asciidoc-docs-server": {
-      "command": "/home/rdmueller/projects/asciidoc-mcp-q/venv/bin/python3",
+      "command": "/home/rdmueller/projects/asciidoc-mcp/.venv/bin/python",
       "args": [
         "-m",
         "src.mcp_server",
