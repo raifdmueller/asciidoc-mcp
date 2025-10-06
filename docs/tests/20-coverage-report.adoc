@@ -1,0 +1,86 @@
+= Coverage Report
+:toc: left
+:toclevels: 2
+:sectnums:
+:icons: font
+:imagesdir: ../images
+
+== Übersicht
+
+Detaillierte Code-Coverage-Analyse aller Projektmodule mit Line-by-Line-Coverage-Informationen.
+
+== Coverage-Dashboard
+
+**Direkter Link zum HTML-Report**: link:../test-reports/htmlcov/index.html[Coverage Dashboard öffnen^]
+
+=== Coverage-Übersicht
+
+++++
+<div style="border: 1px solid #ccc; margin: 10px 0;">
+<iframe src="../test-reports/htmlcov/index.html" 
+        width="100%" 
+        height="600px" 
+        frameborder="0"
+        style="display: block;">
+  <p>Ihr Browser unterstützt keine iframes. 
+     <a href="../test-reports/htmlcov/index.html" target="_blank">
+     Öffnen Sie das Coverage-Dashboard direkt</a>.</p>
+</iframe>
+</div>
+++++
+
+== Modul-spezifische Coverage
+
+Die folgenden Module haben detaillierte Coverage-Reports:
+
+=== Core-Module
+
+* **link:../test-reports/htmlcov/z_145eef247bfb46b6_mcp_server_py.html[mcp_server.py^]**: Haupt-MCP-Server-Logik
+* **link:../test-reports/htmlcov/z_145eef247bfb46b6_document_parser_py.html[document_parser.py^]**: AsciiDoc-Parser
+* **link:../test-reports/htmlcov/z_145eef247bfb46b6_web_server_py.html[web_server.py^]**: Web-Interface
+
+=== API-Module
+
+* **link:../test-reports/htmlcov/z_7f00d53815207ab7_document_api_py.html[document_api.py^]**: Dokument-API
+* **link:../test-reports/htmlcov/z_7f00d53815207ab7_webserver_manager_py.html[webserver_manager.py^]**: Web-Server-Management
+
+=== Utility-Module
+
+* **link:../test-reports/htmlcov/z_145eef247bfb46b6_content_editor_py.html[content_editor.py^]**: Content-Editor
+* **link:../test-reports/htmlcov/z_145eef247bfb46b6_diff_engine_py.html[diff_engine.py^]**: Diff-Engine
+* **link:../test-reports/htmlcov/z_145eef247bfb46b6_file_watcher_py.html[file_watcher.py^]**: File-Watcher
+
+== Coverage-Metriken
+
+=== Gesamt-Coverage
+
+Die Coverage-Berichte zeigen folgende Metriken:
+
+* **Statements**: Anzahl ausführbarer Code-Statements
+* **Missing**: Anzahl nicht ausgeführter Statements
+* **Coverage**: Prozentsatz der Coverage
+* **Missing Lines**: Spezifische Zeilennummern ohne Coverage
+
+=== Coverage-Ziele
+
+* **Minimum**: 80% Line-Coverage
+* **Ziel**: 90% Line-Coverage
+* **Kritische Module**: 95% Line-Coverage (mcp_server.py, document_api.py)
+
+== Function Index
+
+**Link zum Function Index**: link:../test-reports/htmlcov/function_index.html[Function Coverage öffnen^]
+
+++++
+<div style="border: 1px solid #ccc; margin: 10px 0;">
+<iframe src="../test-reports/htmlcov/function_index.html" 
+        width="100%" 
+        height="500px" 
+        frameborder="0"
+        style="display: block;">
+  <p>Ihr Browser unterstützt keine iframes. 
+     <a href="../test-reports/htmlcov/function_index.html" target="_blank">
+     Öffnen Sie den Function Index direkt</a>.</p>
+</iframe>
+</div>
+++++

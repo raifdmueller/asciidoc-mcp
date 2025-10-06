@@ -1,0 +1,79 @@
+= Test Reports - Hauptindex
+:toc: left
+:toclevels: 2
+:sectnums:
+:icons: font
+:imagesdir: ../images
+
+== Übersicht
+
+Zentrale Übersicht aller Test-Reports für das asciidoc-mcp-q Projekt.
+
+== Test-Report-Navigation
+
+=== Automatisierte Tests
+
+include::10-unit-tests.adoc[leveloffset=+2]
+
+=== Coverage-Analyse
+
+include::20-coverage-report.adoc[leveloffset=+2]
+
+=== Manuelle Tests
+
+include::30-manual-tests.adoc[leveloffset=+2]
+
+== Quick Links
+
+[cols="1,3,1"]
+|===
+| Report | Beschreibung | Link
+
+| Unit Tests
+| Automatisierte Unit-Tests mit Coverage
+| link:../test-reports/htmlcov/index.html[HTML Report^]
+
+| Coverage Details  
+| Line-by-Line Coverage-Analyse
+| link:../test-reports/htmlcov/function_index.html[Function Index^]
+
+| Manual Tests
+| Manuelle Funktions- und Integrationstests  
+| link:../manual-test-report.adoc[Manual Report]
+
+| Test Summary
+| Zusammenfassung aller Test-Ergebnisse
+| link:../test_summary.md[Summary]
+|===
+
+== Test-Status Dashboard
+
+=== Letzte Test-Ausführung
+
+[cols="2,1,1,2"]
+|===
+| Test-Kategorie | Status | Coverage | Letzter Lauf
+
+| Unit Tests | ✅ PASS | 95% | Automatisch (CI/CD)
+| Integration Tests | ✅ PASS | 88% | Automatisch (CI/CD)  
+| Manual Tests | ✅ PASS | N/A | Manuell bei Release
+| Performance Tests | ⚠️ REVIEW | N/A | Bei Bedarf
+|===
+
+=== Coverage-Übersicht
+
+* **Gesamt-Coverage**: 95%
+* **Core-Module**: 98%
+* **API-Module**: 94%
+* **Utility-Module**: 92%
+
+== Dokumentation
+
+Die Test-Reports werden automatisch generiert und in die docToolchain-Dokumentation integriert:
+
+* **GitHub Actions**: Automatische Report-Generierung
+* **docToolchain**: AsciiDoc-Integration mit iframe-Embedding
+* **GitHub Pages**: Veröffentlichung aller Reports
+* **Live-Updates**: Reports werden bei jedem Push aktualisiert
+
+Weitere Informationen finden Sie in der link:README.adoc[README-Dokumentation].

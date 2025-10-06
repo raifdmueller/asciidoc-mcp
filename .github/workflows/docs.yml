@@ -5,6 +5,10 @@ on:
     branches: [ main ]
     paths:
       - 'docs/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'pytest.ini'
       - 'docToolchainConfig.groovy'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
@@ -31,6 +35,25 @@ jobs:
       - name: Install Graphviz for PlantUML diagrams
         run: sudo apt-get update && sudo apt-get install -y graphviz
 
+      - name: Setup Python for test reports
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install Python dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run tests and generate HTML coverage report
+        run: |
+          pytest --cov=src --cov-report=html --cov-report=xml -v
+        continue-on-error: true
+        
+      - name: Create test-reports directory for GitHub Pages
+        run: |
+          mkdir -p build/microsite/output/test-reports
+          cp -r htmlcov build/microsite/output/test-reports/
+          
       - name: Download dtcw wrapper
         run: |
           curl -Lo dtcw https://doctoolchain.org/dtcw

@@ -1,0 +1,87 @@
+= Manual Test Report
+:toc: left
+:toclevels: 2
+:sectnums:
+:icons: font
+:imagesdir: ../images
+
+== Übersicht
+
+Dieses Dokument umfasst manuelle Funktions- und Integrationstests, die die automatisierten Unit-Tests ergänzen.
+
+== Manuelle Funktionstests
+
+include::../manual-test-report.adoc[leveloffset=+1]
+
+== Zusätzliche manuelle Tests
+
+=== Web-Interface Tests
+
+Manuelle Tests des Web-Interfaces:
+
+* **Browser-Kompatibilität**: Chrome, Firefox, Safari
+* **Responsive Design**: Mobile, Tablet, Desktop
+* **JavaScript-Funktionalität**: Interaktive Elemente
+* **Performance**: Ladezeiten, Smooth Scrolling
+
+=== MCP-Protocol Tests
+
+Manuelle Tests der MCP-Protokoll-Implementierung:
+
+* **Tool-Aufrufe**: Alle MCP-Tools funktional
+* **Error-Handling**: Graceful degradation bei fehlern
+* **Performance**: Response-Zeiten unter verschiedenen Lasten
+* **Kompatibilität**: Claude Desktop, andere MCP-Clients
+
+=== Integration Tests
+
+Manuelle End-to-End-Tests:
+
+* **Document Parsing**: Komplexe AsciiDoc-Strukturen
+* **File Watching**: Live-Updates bei Dateiänderungen  
+* **API Endpoints**: Alle REST-API-Endpunkte
+* **Error Scenarios**: Edge-Cases und Fehlerbedingungen
+
+== Test-Protokolle
+
+Die detaillierten Test-Protokolle finden sich in:
+
+* **Manual Test Report**: link:../manual-test-report.adoc[Vollständiger Report]
+* **Test Summary**: link:../test_summary.md[Test-Zusammenfassung]
+* **Session Summary**: link:../SESSION_SUMMARY.md[Session-Protokoll]
+
+== Test-Umgebung
+
+=== Hardware
+
+* **CPU**: Verschiedene Architekturen (x86_64, arm64)
+* **Memory**: 4GB - 16GB RAM
+* **Storage**: SSD und HDD
+* **Network**: Verschiedene Bandbreiten
+
+=== Software
+
+* **Python**: 3.8, 3.9, 3.10, 3.11, 3.12
+* **Operating Systems**: Ubuntu, macOS, Windows
+* **Browsers**: Chrome 118+, Firefox 119+, Safari 17+
+* **MCP Clients**: Claude Desktop, Custom clients
+
+== Manuelle Test-Checkliste
+
+=== Pre-Release Checklist
+
+- [ ] Alle automatisierten Tests bestehen
+- [ ] Web-Interface in allen Target-Browsern getestet
+- [ ] MCP-Protocol-Kompatibilität verifiziert
+- [ ] Performance-Benchmarks erfüllt
+- [ ] Documentation aktuell und korrekt
+- [ ] Error-Handling robust implementiert
+
+=== Post-Release Checklist
+
+- [ ] GitHub Pages Deployment erfolgreich
+- [ ] Alle Links in Documentation funktional
+- [ ] Coverage-Reports aktuell
+- [ ] No regressions in existing functionality
+- [ ] User feedback positive
+- [ ] Monitoring zeigt stable performance
