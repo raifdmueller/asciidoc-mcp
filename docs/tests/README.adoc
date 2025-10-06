@@ -1,0 +1,61 @@
+= Test Reports Documentation
+:toc: left
+:toclevels: 2
+:sectnums:
+
+== Übersicht
+
+Dieses Verzeichnis enthält automatisierte Test-Reports, die in der docToolchain-Dokumentation integriert werden.
+
+== Verfügbare Reports
+
+[cols="1,3,2"]
+|===
+| Datei | Beschreibung | Quelle
+
+| link:test-index.adoc[test-index.adoc] 
+| Hauptindex aller Test-Reports 
+| Kombiniert alle Reports
+
+| link:10-unit-tests.adoc[10-unit-tests.adoc] 
+| Automatisierte Unit-Tests und Coverage 
+| pytest HTML-Reports
+
+| link:20-coverage-report.adoc[20-coverage-report.adoc] 
+| Detaillierte Code-Coverage-Analyse 
+| pytest-cov HTML-Reports
+
+| link:30-manual-tests.adoc[30-manual-tests.adoc] 
+| Manuelle Funktions- und Integrationstests 
+| manual-test-report.adoc
+|===
+
+== GitHub Pages Links
+
+Die Reports werden automatisch über GitHub Actions generiert und in GitHub Pages veröffentlicht:
+
+* **Test-Reports**: https://rdmueller.github.io/asciidoc-mcp-q/test-reports/htmlcov/
+* **Test-Dokumentation**: https://rdmueller.github.io/asciidoc-mcp-q/tests/
+
+== Automatisierung
+
+Die Test-Reports werden automatisch generiert durch:
+
+1. **GitHub Actions**: `.github/workflows/docs.yml` 
+2. **pytest**: Generiert HTML-Coverage-Reports
+3. **docToolchain**: Baut AsciiDoc-Dateien mit iframe-Integration
+4. **GitHub Pages**: Veröffentlicht alle Reports
+
+== Lokale Entwicklung
+
+Für lokale Tests:
+
+```bash
+# Tests ausführen und HTML-Reports generieren
+pytest --cov=src --cov-report=html
+
+# docToolchain lokal ausführen
+./dtcw generateSite
+
+# Ergebnis in build/microsite/output/ prüfen
+```

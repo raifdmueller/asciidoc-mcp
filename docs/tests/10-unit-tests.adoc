@@ -1,0 +1,68 @@
+= Unit Test Report
+:toc: left
+:toclevels: 2
+:sectnums:
+:icons: font
+:imagesdir: ../images
+
+== Übersicht
+
+Dieser Report zeigt die Ergebnisse der automatisierten Unit-Tests und Code-Coverage-Analyse.
+
+== Test-Ergebnisse
+
+Die Tests werden mit pytest ausgeführt und generieren detaillierte HTML-Reports mit Coverage-Informationen.
+
+**Direkter Link zum HTML-Report**: link:../test-reports/htmlcov/index.html[Coverage Report öffnen^]
+
+=== Interaktiver Coverage-Report
+
+++++
+<div style="border: 1px solid #ccc; margin: 10px 0;">
+<iframe src="../test-reports/htmlcov/index.html" 
+        width="100%" 
+        height="800px" 
+        frameborder="0"
+        style="display: block;">
+  <p>Ihr Browser unterstützt keine iframes. 
+     <a href="../test-reports/htmlcov/index.html" target="_blank">
+     Öffnen Sie den Coverage-Report direkt</a>.</p>
+</iframe>
+</div>
+++++
+
+== Test-Kategorien
+
+Das Projekt verwendet pytest-Marker für verschiedene Test-Kategorien:
+
+* **unit**: Unit-Tests für einzelne Komponenten
+* **integration**: Integrationstests über mehrere Komponenten
+* **slow**: Tests mit längerer Laufzeit
+* **web**: Web-Server und API-Tests
+* **parser**: Document-Parser-Tests
+* **watcher**: File-Watcher-Tests
+
+== Coverage-Metriken
+
+Der Coverage-Report zeigt:
+
+* **Line Coverage**: Prozentsatz der ausgeführten Code-Zeilen
+* **Branch Coverage**: Prozentsatz der durchlaufenen Code-Pfade
+* **Function Coverage**: Prozentsatz der aufgerufenen Funktionen
+* **Missing Lines**: Spezifische Zeilen ohne Test-Coverage
+
+== Lokale Ausführung
+
+```bash
+# Alle Tests mit Coverage
+pytest --cov=src --cov-report=html
+
+# Nur Unit-Tests
+pytest -m unit
+
+# Nur Integration-Tests
+pytest -m integration
+
+# Bestimmte Test-Datei
+pytest tests/test_mcp_server.py -v
+```
