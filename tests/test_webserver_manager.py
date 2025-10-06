@@ -122,10 +122,10 @@ class TestWebserverManager:
         """Test find_free_port skips ports that are in use"""
         wm = WebserverManager(test_server)
 
-        # Mock socket to simulate port 8080 in use, 8081 free
-        with patch('socket.socket') as mock_socket_class:
+        # Mock socket in the webserver_manager module where it's imported
+        with patch('src.mcp.webserver_manager.socket.socket') as mock_socket_class:
             mock_socket = MagicMock()
-            mock_socket_class.return_value.__enter__.return_value = mock_socket
+            mock_socket_class.return_value = mock_socket
 
             # First attempt (8080) fails, second (8081) succeeds
             mock_socket.bind.side_effect = [OSError("Port in use"), None]
