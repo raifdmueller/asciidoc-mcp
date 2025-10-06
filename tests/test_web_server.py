@@ -218,6 +218,77 @@ Content for section 2.
             # Backward compatibility: should still have individual section content
             self.assertIn('content', data)
     
+    def test_api_section_with_context_full_returns_include_file_content(self):
+        """Test /api/section/{section_id}?context=full returns raw include file content for multi-file documents"""
+        # Create multi-file document structure
+        main_doc = self.test_dir / "main.adoc"
+        main_doc.write_text("""= Main Document
+
+include::chapter1.adoc[]
+
+include::chapter2.adoc[]
+""")
+        
+        chapter1_doc = self.test_dir / "chapter1.adoc"
+        chapter1_doc.write_text("""== Chapter 1
+This is content in chapter 1.
+
+=== Subsection 1.1
+More content in chapter 1.
+""")
+        
+        chapter2_doc = self.test_dir / "chapter2.adoc"
+        chapter2_doc.write_text("""== Chapter 2
+This is content in chapter 2.
+""")
+        
+        # Re-initialize server with multi-file documents
+        init_server(self.test_dir)
+        client = TestClient(app)
+        
+        # Get structure to find section from an include file
+        structure_response = client.get("/api/structure")
+        structure = structure_response.json()
+        
+        # Find a section that comes from chapter1.adoc
+        chapter1_section_id = None
+        for section_id, section_data in structure.items():
+            if 'Chapter 1' in section_data.get('title', ''):
+                chapter1_section_id = section_id
+                break
+        
+        self.assertIsNotNone(chapter1_section_id, "Could not find Chapter 1 section in structure")
+        
+        # Test context=full should return raw chapter1.adoc content (not resolved main.adoc)
+        response = client.get(f"/api/section/{chapter1_section_id}?context=full")
+        
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        
+        # Should contain full_content field
+        self.assertIn('full_content', data)
+        full_content = data['full_content']
+        
+        # CRITICAL: Should contain ONLY the raw chapter1.adoc content
+        self.assertIn('== Chapter 1', full_content)
+        self.assertIn('This is content in chapter 1.', full_content) 
+        self.assertIn('=== Subsection 1.1', full_content)
+        self.assertIn('More content in chapter 1.', full_content)
+        
+        # Should NOT contain content from main.adoc or other chapters
+        self.assertNotIn('= Main Document', full_content)  # Not the main doc title
+        self.assertNotIn('include::', full_content)        # Not the include directives
+        self.assertNotIn('Chapter 2', full_content)        # Not content from other includes
+        
+        # Section position should be relative to the raw chapter1.adoc file
+        section_position = data['section_position']
+        self.assertIn('line_start', section_position)
+        self.assertIn('line_end', section_position)
+        
+        # Line positions should be small numbers (relative to chapter1.adoc, not main.adoc)
+        self.assertLessEqual(section_position['line_start'], 10, 
+                           "Line start should be relative to chapter1.adoc, not main.adoc")
+    
     def test_web_interface_expandable_hierarchy(self):
         """Test that web interface HTML supports expandable hierarchy"""
         response = self.client.get("/")
