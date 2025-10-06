@@ -491,6 +491,41 @@
 </div>
 </div>
 <div class="sect3">
+<h4 id="_search_relevance_algorithm">Search Relevance Algorithm</h4>
+<div class="paragraph">
+<p>The <code>document_api.py</code> module implements a search relevance scoring algorithm used to rank search results returned by the <code>search_content()</code> method.</p>
+</div>
+<div class="paragraph">
+<p><strong>Algorithm Implementation:</strong>
+The relevance scoring is calculated in the <code>_calculate_relevance()</code> method using the following logic:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">def _calculate_relevance(self, section: Section, query: str) -&gt; float:
+    """Simple relevance scoring"""
+    title_matches = section.title.lower().count(query)
+    content_matches = section.content.lower().count(query)
+    return title_matches * 2 + content_matches</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p><strong>Scoring Logic:</strong>
+- <strong>Title matches</strong>: Weighted with factor 2 (higher importance)
+- <strong>Content matches</strong>: Weighted with factor 1 (standard importance)
+- <strong>Total score</strong>: Sum of weighted matches</p>
+</div>
+<div class="paragraph">
+<p><strong>Usage Context:</strong>
+This algorithm is used within the search functionality to provide more relevant results by prioritizing documents where search terms appear in titles over those where terms only appear in content.</p>
+</div>
+<div class="paragraph">
+<p><strong>Example:</strong>
+- Document with 1 title match + 3 content matches: Score = (1 × 2) + (3 × 1) = 5
+- Document with 0 title matches + 5 content matches: Score = (0 × 2) + (5 × 1) = 5
+- The first document would be considered more relevant due to the title match</p>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_dependency_injection_pattern">Dependency Injection Pattern</h4>
 <div class="paragraph">
 <p>The orchestrator (<code>MCPDocumentationServer</code>) creates and injects dependencies:</p>
