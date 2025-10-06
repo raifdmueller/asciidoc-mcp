@@ -149,6 +149,35 @@ Rel(webserver_mgr, orchestrator, "accesses", "server instance")
 
 **Total: 1,229 lines across 7 focused modules** (vs 916 lines in monolithic mcp_server.py)
 
+==== Search Relevance Algorithm
+
+The `document_api.py` module implements a search relevance scoring algorithm used to rank search results returned by the `search_content()` method.
+
+**Algorithm Implementation:**
+The relevance scoring is calculated in the `_calculate_relevance()` method using the following logic:
+
+[source,python]
+----
+def _calculate_relevance(self, section: Section, query: str) -> float:
+    """Simple relevance scoring"""
+    title_matches = section.title.lower().count(query)
+    content_matches = section.content.lower().count(query)
+    return title_matches * 2 + content_matches
+----
+
+**Scoring Logic:**
+- **Title matches**: Weighted with factor 2 (higher importance)
+- **Content matches**: Weighted with factor 1 (standard importance)
+- **Total score**: Sum of weighted matches
+
+**Usage Context:**
+This algorithm is used within the search functionality to provide more relevant results by prioritizing documents where search terms appear in titles over those where terms only appear in content.
+
+**Example:**
+- Document with 1 title match + 3 content matches: Score = (1 × 2) + (3 × 1) = 5
+- Document with 0 title matches + 5 content matches: Score = (0 × 2) + (5 × 1) = 5
+- The first document would be considered more relevant due to the title match
+
 ==== Dependency Injection Pattern
 
 The orchestrator (`MCPDocumentationServer`) creates and injects dependencies:
