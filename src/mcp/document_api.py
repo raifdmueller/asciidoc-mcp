@@ -177,7 +177,23 @@ class DocumentAPI:
                     section_data['chapter_number'] = 999  # Sort after numbered chapters
                     main_chapters[section_id] = section_data
 
-        return main_chapters
+        # Sort chapters by chapter_number to ensure correct order
+        sorted_chapters = {}
+        
+        # First add numbered chapters (1-12) in order
+        for i in range(1, 100):  # Support up to 99 chapters
+            key = f"chapter_{i:02d}"
+            if key in main_chapters:
+                sorted_chapters[key] = main_chapters[key]
+        
+        # Then add other documents sorted by their title
+        other_docs = [(k, v) for k, v in main_chapters.items() if not k.startswith('chapter_')]
+        other_docs.sort(key=lambda x: x[1].get('title', '').lower())
+        
+        for key, value in other_docs:
+            sorted_chapters[key] = value
+
+        return sorted_chapters
 
     def get_root_files_structure(self) -> Dict[str, Any]:
         """Get structure grouped by root files - shows files as top level with their sections"""

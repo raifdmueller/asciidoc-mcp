@@ -259,6 +259,7 @@ def main():
     global _server
     import signal
     import atexit
+    import os
 
     if len(sys.argv) != 2:
         print("Usage: python mcp_server.py <project_root>", file=sys.stderr)
@@ -269,8 +270,11 @@ def main():
         print(f"Project root does not exist: {project_root}", file=sys.stderr)
         sys.exit(1)
 
+    # Check environment variable to disable webserver for MCP mode
+    enable_webserver = os.environ.get('DISABLE_WEBSERVER', '').lower() not in ('1', 'true', 'yes')
+
     # Initialize server
-    _server = MCPDocumentationServer(project_root)
+    _server = MCPDocumentationServer(project_root, enable_webserver=enable_webserver)
 
     # Setup signal handlers for graceful shutdown
     def signal_handler(signum, frame):

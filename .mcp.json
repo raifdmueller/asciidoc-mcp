@@ -21,7 +21,8 @@
         "/home/rdmueller/projects/asciidoc-mcp-q"
       ],
       "env": {
-        "PYTHONPATH": "/home/rdmueller/projects/asciidoc-mcp-q"
+        "PYTHONPATH": "/home/rdmueller/projects/asciidoc-mcp-q",
+        "DISABLE_WEBSERVER": "true"
       }
     },
     "serena": {
