@@ -44,27 +44,36 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run tests and generate HTML coverage report
+      - name: Run tests and prepare coverage reports for deployment
         run: |
           export PYTHONPATH=$PYTHONPATH:.
-          pytest --cov=src --cov-report=html --cov-report=xml -v
-        continue-on-error: true
-        
-      - name: Create test-reports directory for GitHub Pages
-        run: |
+          
+          # Run tests and generate coverage reports
+          echo "Running pytest with coverage..."
+          pytest --cov=src --cov-report=html --cov-report=xml -v || true
+          
+          # Ensure test-reports directory exists
           mkdir -p build/microsite/output/test-reports
-          echo "Current directory contents:"
-          ls -la
-          echo "Looking for htmlcov directory..."
+          
+          # Copy coverage reports immediately after generation
+          echo "Checking for generated coverage reports..."
           if [ -d "htmlcov" ]; then
             echo "Found htmlcov directory, copying to test-reports..."
             cp -r htmlcov build/microsite/output/test-reports/
-            echo "Copy completed. Contents of test-reports:"
+            echo "Coverage reports copied successfully."
+            echo "Contents of test-reports directory:"
             ls -la build/microsite/output/test-reports/
+            echo "Contents of htmlcov directory:"
+            ls -la build/microsite/output/test-reports/htmlcov/ | head -5
           else
-            echo "Warning: htmlcov directory not found, skipping coverage report copy"
-            echo "Available files and directories:"
+            echo "ERROR: htmlcov directory not found after pytest execution"
+            echo "Current directory contents:"
+            ls -la
+            echo "Searching for coverage-related files:"
             find . -name "*cov*" -o -name "*html*" | head -10
+            # Create a fallback index page to help debug
+            mkdir -p build/microsite/output/test-reports/htmlcov
+            echo "<html><body><h1>Coverage reports not generated</h1><p>Check GitHub Actions logs for details.</p></body></html>" > build/microsite/output/test-reports/htmlcov/index.html
           fi
           
       - name: Download dtcw wrapper
