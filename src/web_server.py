@@ -53,6 +53,14 @@ async def validate_structure():
     
     return doc_server.validate_structure()
 
+@app.get("/api/search")
+async def search_content(q: str):
+    """Search content in sections"""
+    if not doc_server:
+        raise HTTPException(status_code=500, detail="Server not initialized")
+    
+    return doc_server.doc_api.search_content(q)
+
 def _build_base_section_response(section) -> dict:
     """Build the base section response with common fields"""
     return {
