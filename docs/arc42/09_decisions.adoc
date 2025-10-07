@@ -429,3 +429,111 @@ Migrate to the **official MCP SDK** (`mcp[cli]>=1.0.0`) which includes FastMCP 1
 - **ADR-006**: Modular MCP Server Architecture - Enabled clean migration by separating protocol handling from business logic
 - **ADR-003**: Technology Stack (Python/FastAPI) - Python ecosystem makes official MCP SDK the natural choice
 
+=== ADR-010: Pure Docstring BDD Testing Approach
+
+[cols="1,3"]
+|===
+| Status | Accepted
+| Date | 2025-10-07
+| Decision Makers | Development Team (Collaborative Decision)
+| Related Issues | GitHub Issue #61
+|===
+
+==== Context
+The project needed to decide whether to adopt Behavior-Driven Development (BDD) testing practices for the existing pytest-based test suite (19 files, 4,287 lines of test code). The evaluation included:
+
+- Current test structure using pytest with unittest.TestCase classes
+- BDD framework options (pytest-bdd, behave)
+- Stakeholder readability vs. maintenance overhead considerations
+- Team size (single developer) and project type (technical MCP server tool)
+
+**Key constraint identified during collaborative decision process**: Requirement for **inline BDD** approach where Gherkin syntax and test implementation exist in the same file, avoiding separate .feature files.
+
+==== Decision
+Adopt **Pure Docstring BDD** approach for new tests and gradual conversion of existing tests. This approach combines:
+
+1. **Gherkin-style docstrings** with business context (Feature/Scenario/Given/When/Then)
+2. **Structured comments** in test code matching docstring steps
+3. **No separate .feature files** or additional framework dependencies
+4. **Full pytest compatibility** with existing infrastructure
+
+**Example Implementation:**
+```python
+def test_parser_initialization(self):
+    """
+    Feature: Document Parser Initialization
+    As a documentation maintainer
+    I want to create a DocumentParser with sensible defaults
+    So that I can process documentation with predictable behavior
+    
+    Scenario: Initialize parser with default configuration
+        Given I need to parse AsciiDoc documents
+        When I create a new DocumentParser instance
+        Then it should have max_include_depth of 4
+        And it should have an empty processed files set
+    """
+    # Given: I need to parse AsciiDoc documents
+    # When: I create a new DocumentParser instance
+    parser = DocumentParser()
+    # Then: it should have max_include_depth of 4
+    assert parser.max_include_depth == 4
+    # And: it should have an empty processed files set
+    assert isinstance(parser.processed_files, set)
+    assert len(parser.processed_files) == 0
+```
+
+==== Consequences
+**Pro:**
+*   **Stakeholder-readable**: Business context clear in test docstrings
+*   **Zero Dependencies**: Works with existing pytest infrastructure
+*   **Single File Approach**: Meets user requirement for inline BDD
+*   **Gradual Adoption**: Can convert tests incrementally during refactoring
+*   **Better Documentation**: Tests become self-documenting specifications
+*   **Improved Onboarding**: New contributors understand business context faster
+
+**Con:**
+*   **Longer Files**: More verbose docstrings increase file length
+*   **Discipline Required**: Team must maintain consistent BDD formatting
+*   **Learning Curve**: Developers need to understand Gherkin syntax
+
+**Neutral:**
+*   **Same Number of Files**: No additional .feature files to maintain
+*   **Pytest Compatibility**: All existing tooling (coverage, markers, fixtures) continues to work
+
+==== Implementation Strategy
+**Gradual Adoption:**
+1. **New Tests**: Write in Pure Docstring BDD format immediately
+2. **Refactoring Priority**: Convert existing tests when making changes
+3. **Focus Areas**: Integration tests benefit most from business context
+4. **Style Guide**: Create consistent formatting standards
+
+**Quality Measures:**
+- BDD docstring style guide for consistency
+- Examples and templates for common test patterns
+- Integration with existing pytest markers (unit, integration, web, parser)
+
+==== Alternatives Considered
+**1. Traditional BDD with pytest-bdd**
+- **Description**: Separate .feature files with step definitions
+- **Rejected**: User requirement for single-file approach not met
+- **Concerns**: 2.5x more code, maintenance overhead, separate file synchronization
+
+**2. Behave Framework**
+- **Description**: Standalone BDD runner with pure Gherkin philosophy
+- **Rejected**: Would abandon existing pytest infrastructure
+- **Concerns**: Complete test suite migration required, learning curve
+
+**3. Status Quo (No BDD)**
+- **Description**: Continue with current pytest/unittest approach
+- **Rejected**: User preference for BDD approach with business context
+- **Concerns**: Tests remain technically focused, lacking stakeholder readability
+
+**4. Comments-Only BDD**
+- **Description**: Add Given/When/Then comments without docstring context
+- **Rejected**: Lacks feature/scenario business context in docstrings
+- **Missing**: User story mapping and acceptance criteria clarity
+
+==== Related Decisions
+- **ADR-008**: Test Infrastructure with pytest - Provides foundation for BDD enhancement
+- **Coding Standards**: Files <500 lines principle supports focused, well-documented test files
+
