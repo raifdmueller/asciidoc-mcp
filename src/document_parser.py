@@ -15,6 +15,7 @@ class Section:
     source_file: str  # Relative path to source file
     children: List[str]  # Store child IDs instead of Section objects
     parent_id: Optional[str] = None  # Store parent ID instead of Section object
+    document_position: int = 0  # Position in resolved document for proper sorting
 
 class DocumentParser:
     def __init__(self, max_include_depth: int = 4):
@@ -280,7 +281,8 @@ class DocumentParser:
                     line_start=i,
                     line_end=i,
                     source_file=section_source_file,
-                    children=[]
+                    children=[],
+                    document_position=i
                 )
                 
                 # Manage hierarchy

@@ -104,12 +104,12 @@ class DocumentAPI:
                 if section_id.startswith(parent_id + '.')
             ]
 
-        # Sort by chapter number (if present), then line_start, then title
+        # Sort by chapter number (if present), then document_position, then title
         def get_sort_key(item):
             section_id, section = item
             chapter_match = re.match(r'^(\d+)\.', section.title)
             chapter_num = int(chapter_match.group(1)) if chapter_match else 999
-            return (chapter_num, section.line_start, section.title)
+            return (chapter_num, section.document_position, section.title)
 
         sorted_sections = sorted(filtered_sections, key=get_sort_key)
 
@@ -249,7 +249,8 @@ class DocumentAPI:
             return file_sections
 
         # Iterate over each root file (skip included files)
-        for root_file in self.server.root_files:
+        # Sort root files alphabetically by filename for consistent navigation order
+        for root_file in sorted(self.server.root_files, key=lambda f: f.name):
             # Skip files that are included by other files
             if root_file in self.server.included_files:
                 continue
