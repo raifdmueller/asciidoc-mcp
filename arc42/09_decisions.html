@@ -358,6 +358,7 @@
 <li><a href="#_adr_007_separate_html_template_files">ADR-007: Separate HTML Template Files</a></li>
 <li><a href="#_adr_008_test_infrastructure_with_pytest">ADR-008: Test Infrastructure with pytest</a></li>
 <li><a href="#_adr_009_migration_to_fastmcp_sdk">ADR-009: Migration to FastMCP SDK</a></li>
+<li><a href="#_adr_010_pure_docstring_bdd_testing_approach">ADR-010: Pure Docstring BDD Testing Approach</a></li>
 </ul>
 </li>
 </ul>
@@ -1382,6 +1383,187 @@ HTML_TEMPLATE = template_path.read_text(encoding='utf-8')</code></pre>
 </li>
 <li>
 <p><strong>ADR-003</strong>: Technology Stack (Python/FastAPI) - Python ecosystem makes official MCP SDK the natural choice</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_adr_010_pure_docstring_bdd_testing_approach">ADR-010: Pure Docstring BDD Testing Approach</h3>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 75%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Accepted</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Date</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">2025-10-07</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Decision Makers</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Development Team (Collaborative Decision)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Related Issues</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">GitHub Issue #61</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_context_10">Context</h4>
+<div class="paragraph">
+<p>The project needed to decide whether to adopt Behavior-Driven Development (BDD) testing practices for the existing pytest-based test suite (19 files, 4,287 lines of test code). The evaluation included:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Current test structure using pytest with unittest.TestCase classes</p>
+</li>
+<li>
+<p>BDD framework options (pytest-bdd, behave)</p>
+</li>
+<li>
+<p>Stakeholder readability vs. maintenance overhead considerations</p>
+</li>
+<li>
+<p>Team size (single developer) and project type (technical MCP server tool)</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p><strong>Key constraint identified during collaborative decision process</strong>: Requirement for <strong>inline BDD</strong> approach where Gherkin syntax and test implementation exist in the same file, avoiding separate .feature files.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_decision_10">Decision</h4>
+<div class="paragraph">
+<p>Adopt <strong>Pure Docstring BDD</strong> approach for new tests and gradual conversion of existing tests. This approach combines:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><strong>Gherkin-style docstrings</strong> with business context (Feature/Scenario/Given/When/Then)</p>
+</li>
+<li>
+<p><strong>Structured comments</strong> in test code matching docstring steps</p>
+</li>
+<li>
+<p><strong>No separate .feature files</strong> or additional framework dependencies</p>
+</li>
+<li>
+<p><strong>Full pytest compatibility</strong> with existing infrastructure</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p><strong>Example Implementation:</strong></p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code data-lang="python">def test_parser_initialization(self):
+    """
+    Feature: Document Parser Initialization
+    As a documentation maintainer
+    I want to create a DocumentParser with sensible defaults
+    So that I can process documentation with predictable behavior
+
+    Scenario: Initialize parser with default configuration
+        Given I need to parse AsciiDoc documents
+        When I create a new DocumentParser instance
+        Then it should have max_include_depth of 4
+        And it should have an empty processed files set
+    """
+    # Given: I need to parse AsciiDoc documents
+    # When: I create a new DocumentParser instance
+    parser = DocumentParser()
+    # Then: it should have max_include_depth of 4
+    assert parser.max_include_depth == 4
+    # And: it should have an empty processed files set
+    assert isinstance(parser.processed_files, set)
+    assert len(parser.processed_files) == 0</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_consequences_10">Consequences</h4>
+<div class="paragraph">
+<p><strong>Pro:</strong>
+*   <strong>Stakeholder-readable</strong>: Business context clear in test docstrings
+*   <strong>Zero Dependencies</strong>: Works with existing pytest infrastructure
+*   <strong>Single File Approach</strong>: Meets user requirement for inline BDD
+*   <strong>Gradual Adoption</strong>: Can convert tests incrementally during refactoring
+*   <strong>Better Documentation</strong>: Tests become self-documenting specifications
+*   <strong>Improved Onboarding</strong>: New contributors understand business context faster</p>
+</div>
+<div class="paragraph">
+<p><strong>Con:</strong>
+*   <strong>Longer Files</strong>: More verbose docstrings increase file length
+*   <strong>Discipline Required</strong>: Team must maintain consistent BDD formatting
+*   <strong>Learning Curve</strong>: Developers need to understand Gherkin syntax</p>
+</div>
+<div class="paragraph">
+<p><strong>Neutral:</strong>
+*   <strong>Same Number of Files</strong>: No additional .feature files to maintain
+*   <strong>Pytest Compatibility</strong>: All existing tooling (coverage, markers, fixtures) continues to work</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_implementation_strategy">Implementation Strategy</h4>
+<div class="paragraph">
+<p><strong>Gradual Adoption:</strong>
+1. <strong>New Tests</strong>: Write in Pure Docstring BDD format immediately
+2. <strong>Refactoring Priority</strong>: Convert existing tests when making changes
+3. <strong>Focus Areas</strong>: Integration tests benefit most from business context
+4. <strong>Style Guide</strong>: Create consistent formatting standards</p>
+</div>
+<div class="paragraph">
+<p><strong>Quality Measures:</strong>
+- BDD docstring style guide for consistency
+- Examples and templates for common test patterns
+- Integration with existing pytest markers (unit, integration, web, parser)</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_alternatives_considered_10">Alternatives Considered</h4>
+<div class="paragraph">
+<p><strong>1. Traditional BDD with pytest-bdd</strong>
+- <strong>Description</strong>: Separate .feature files with step definitions
+- <strong>Rejected</strong>: User requirement for single-file approach not met
+- <strong>Concerns</strong>: 2.5x more code, maintenance overhead, separate file synchronization</p>
+</div>
+<div class="paragraph">
+<p><strong>2. Behave Framework</strong>
+- <strong>Description</strong>: Standalone BDD runner with pure Gherkin philosophy
+- <strong>Rejected</strong>: Would abandon existing pytest infrastructure
+- <strong>Concerns</strong>: Complete test suite migration required, learning curve</p>
+</div>
+<div class="paragraph">
+<p><strong>3. Status Quo (No BDD)</strong>
+- <strong>Description</strong>: Continue with current pytest/unittest approach
+- <strong>Rejected</strong>: User preference for BDD approach with business context
+- <strong>Concerns</strong>: Tests remain technically focused, lacking stakeholder readability</p>
+</div>
+<div class="paragraph">
+<p><strong>4. Comments-Only BDD</strong>
+- <strong>Description</strong>: Add Given/When/Then comments without docstring context
+- <strong>Rejected</strong>: Lacks feature/scenario business context in docstrings
+- <strong>Missing</strong>: User story mapping and acceptance criteria clarity</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_related_decisions_2">Related Decisions</h4>
+<div class="ulist">
+<ul>
+<li>
+<p><strong>ADR-008</strong>: Test Infrastructure with pytest - Provides foundation for BDD enhancement</p>
+</li>
+<li>
+<p><strong>Coding Standards</strong>: Files &lt;500 lines principle supports focused, well-documented test files</p>
 </li>
 </ul>
 </div>
