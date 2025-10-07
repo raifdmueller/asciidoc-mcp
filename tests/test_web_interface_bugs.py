@@ -89,7 +89,7 @@ class TestWebInterfaceBugs(unittest.TestCase):
 
     def test_javascript_safe_section_structure(self):
         """Test that section structure is safe for JavaScript processing"""
-        result = self.server.get_structure(max_depth=2)
+        result = self.server.get_structure(start_level=1)
         sections = result.get('sections', [])
 
         # Each section should have required fields for JavaScript
