@@ -6,9 +6,16 @@ Handles all document structure, sections, metadata, and search operations.
 
 from typing import Dict, List, Any, Optional
 from datetime import datetime
-from src.document_parser import Section
-from src.content_editor import ContentEditor
-from src.diff_engine import DiffEngine
+
+try:
+    from src.document_parser import Section
+    from src.content_editor import ContentEditor
+    from src.diff_engine import DiffEngine
+except ImportError:
+    # Fallback for when run as script without src module in path
+    from document_parser import Section
+    from content_editor import ContentEditor
+    from diff_engine import DiffEngine
 import os
 import re
 
@@ -170,7 +177,23 @@ class DocumentAPI:
                     section_data['chapter_number'] = 999  # Sort after numbered chapters
                     main_chapters[section_id] = section_data
 
-        return main_chapters
+        # Sort chapters by chapter_number to ensure correct order
+        sorted_chapters = {}
+        
+        # First add numbered chapters (1-12) in order
+        for i in range(1, 100):  # Support up to 99 chapters
+            key = f"chapter_{i:02d}"
+            if key in main_chapters:
+                sorted_chapters[key] = main_chapters[key]
+        
+        # Then add other documents sorted by their title
+        other_docs = [(k, v) for k, v in main_chapters.items() if not k.startswith('chapter_')]
+        other_docs.sort(key=lambda x: x[1].get('title', '').lower())
+        
+        for key, value in other_docs:
+            sorted_chapters[key] = value
+
+        return sorted_chapters
 
     def get_root_files_structure(self) -> Dict[str, Any]:
         """Get structure grouped by root files - shows files as top level with their sections"""
@@ -178,125 +201,110 @@ class DocumentAPI:
 
         structure = {}
 
+        # Helper function to determine if a file is an aggregator file
+        def is_aggregator_file(file_path: Path) -> bool:
+            """Check if a file contains only includes and no content sections."""
+            try:
+                content = file_path.read_text(encoding='utf-8')
+                lines = [line.strip() for line in content.split('\n') if line.strip()]
+                
+                # Filter out metadata lines (starting with :) and comments
+                content_lines = [line for line in lines 
+                               if not line.startswith(':') and not line.startswith('//')]
+                
+                # Check if most lines are includes
+                include_lines = [line for line in content_lines if line.startswith('include::')]
+                
+                # It's an aggregator if it has includes and very little other content
+                return len(include_lines) > 0 and len(content_lines) - len(include_lines) <= 3
+            except Exception:
+                return False
+
+        # Helper function to collect sections for a root file (including from includes)
+        def collect_sections_for_root_file(root_file: Path) -> list:
+            """Collect all sections belonging to a root file (including from includes)."""
+            file_sections = []
+            root_file_str = str(root_file)
+            root_file_rel = str(root_file.relative_to(self.server.project_root))
+            
+            # Check if this is an aggregator file
+            if is_aggregator_file(root_file):
+                # For aggregator files, collect sections from all included files
+                # Get all sections that come from files included by this root file
+                for section_id, section in self.server.sections.items():
+                    section_file_path = Path(section.source_file)
+                    
+                    # Check if this section comes from a file that's included
+                    if section_file_path in self.server.included_files:
+                        file_sections.append((section_id, section))
+                    elif section.source_file == root_file_str or section.source_file == root_file_rel:
+                        # Also include direct sections from the root file itself
+                        file_sections.append((section_id, section))
+            else:
+                # For non-aggregator files, only collect direct sections  
+                for section_id, section in self.server.sections.items():
+                    if section.source_file == root_file_str or section.source_file == root_file_rel:
+                        file_sections.append((section_id, section))
+            
+            return file_sections
+
         # Iterate over each root file (skip included files)
         for root_file in self.server.root_files:
             # Skip files that are included by other files
             if root_file in self.server.included_files:
                 continue
 
-            # Get absolute path for matching
-            abs_path = str(root_file)
-
-            # Also get relative path for display
+            # Get relative path for display
             try:
                 rel_path = str(root_file.relative_to(self.server.project_root))
             except ValueError:
                 rel_path = str(root_file)
 
-            # Find all sections belonging to this file
-            # Sections may have either absolute or relative paths
-            file_sections = []
-            for section_id, section in self.server.sections.items():
-                # Try matching both absolute and relative paths
-                if section.source_file == abs_path or section.source_file == rel_path:
-                    # Get section data
-                    children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
-
-                    section_data = {
-                        'title': section.title,
-                        'level': section.level,
-                        'id': section_id,
-                        'children_count': children_count,
-                        'line_start': section.line_start,
-                        'line_end': section.line_end,
-                        'source_file': section.source_file,
-                        'children': []
-                    }
-                    file_sections.append((section_id, section_data))
-
-            # Sort sections by line_start to maintain document order
-            file_sections.sort(key=lambda x: self.server.sections[x[0]].line_start)
+            # Collect sections for this root file
+            file_sections = collect_sections_for_root_file(root_file)
+            
+            if not file_sections:
+                continue
 
             # Build hierarchical structure for sections within this file
             section_map = {}
             root_sections = []
 
-            for section_id, section_data in file_sections:
+            for section_id, section in file_sections:
+                children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
+
+                section_data = {
+                    'title': section.title,
+                    'level': section.level,
+                    'id': section_id,
+                    'children_count': children_count,
+                    'line_start': section.line_start,
+                    'line_end': section.line_end,
+                    'source_file': section.source_file,
+                    'children': []
+                }
                 section_map[section_id] = section_data
 
-                # Determine parent within same file
+                # Determine parent using dot notation hierarchy
                 if '.' in section_id:
                     parent_id = '.'.join(section_id.split('.')[:-1])
                     if parent_id in section_map:
                         section_map[parent_id]['children'].append(section_data)
                     else:
-                        # Parent not in same file, treat as root-level
                         root_sections.append(section_data)
                 else:
-                    # Top-level section
                     root_sections.append(section_data)
 
-            # If no direct sections found, check if this is an aggregator file
-            # (file that only contains includes, like docs/arc42.adoc)
-            if not file_sections:
-                # For aggregator files, include all sections that belong to this file
-                # This handles the case where includes are resolved but source_file still points to the aggregator
-                for section_id, section in self.server.sections.items():
-                    # Check if section comes from this specific file
-                    if section.source_file == rel_path:
-                        # Collect ALL sections from included files to build complete hierarchy
-                        children_count = len(section.children) if hasattr(section, 'children') and section.children else 0
+            # Sort root sections by line_start to maintain document order
+            root_sections.sort(key=lambda x: self.server.sections[x['id']].line_start)
 
-                        section_data = {
-                            'title': section.title,
-                            'level': section.level,
-                            'id': section_id,
-                            'children_count': children_count,
-                            'line_start': section.line_start,
-                            'line_end': section.line_end,
-                            'source_file': section.source_file,
-                            'children': []
-                        }
-                        file_sections.append((section_id, section_data))
-
-                # If we found sections from includes, build the structure
-                if file_sections:
-                    # Sort sections by source filename to maintain document order
-                    # (each included file starts at line 1, so line_start doesn't help)
-                    # Extract basename from source_file path for sorting
-                    file_sections.sort(key=lambda x: os.path.basename(self.server.sections[x[0]].source_file))
-
-                    # Build hierarchical structure
-                    section_map = {}
-                    root_sections = []
-
-                    for section_id, section_data in file_sections:
-                        section_map[section_id] = section_data
-
-                        # Determine parent within same file
-                        if '.' in section_id:
-                            parent_id = '.'.join(section_id.split('.')[:-1])
-                            if parent_id in section_map:
-                                section_map[parent_id]['children'].append(section_data)
-                            else:
-                                # Parent not in same file, treat as root-level
-                                # Only add level 2 sections to root (main chapters)
-                                if section_data['level'] == 2:
-                                    root_sections.append(section_data)
-                        else:
-                            # Top-level section - only add if level 2
-                            if section_data['level'] == 2:
-                                root_sections.append(section_data)
-
-            # Create file entry
-            if file_sections:  # Only add files that have sections
-                total_sections = len(file_sections)
-                structure[rel_path] = {
-                    'filename': root_file.name,
-                    'path': rel_path,
-                    'section_count': total_sections,
-                    'sections': root_sections
-                }
+            # Create file entry in the expected format
+            structure[rel_path] = {
+                'filename': root_file.name,
+                'path': rel_path,
+                'section_count': len(file_sections),
+                'sections': root_sections
+            }
 
         return structure
 

@@ -55,20 +55,18 @@ Content C.
 """)
         
         server = MCPDocumentationServer(self.test_dir)
-        structure = server.get_structure()
+        structure = server.get_structure(start_level=2)  # Get level-2 sections
         
         # Debug: see what sections we actually get
         print("Available sections:", list(structure.keys()))
         
-        # Find level-2 sections (the ones we created)
-        level2_sections = []
-        for section_id, section_data in structure.items():
-            if section_data.get('level') == 2:
-                level2_sections.append(section_id)
+        # Filter to only sections from ordered.adoc (document.section-*)
+        # Exclude sections from test.adoc (test-document.section-*)
+        level2_sections = [s for s in structure.keys() if s.startswith('document.')]
         
         print("Level 2 sections:", level2_sections)
         
-        # Should have 3 level-2 sections
+        # Should have 3 level-2 sections from ordered.adoc
         self.assertEqual(len(level2_sections), 3)
         
         # For now, just verify we have sections - order test comes next

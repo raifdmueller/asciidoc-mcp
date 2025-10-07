@@ -14,14 +14,15 @@
       ]
     },
     "asciidoc-docs-server": {
-      "command": "/home/rdmueller/projects/asciidoc-mcp-q/venv/bin/python3",
+      "command": "/home/rdmueller/projects/asciidoc-mcp/.venv/bin/python",
       "args": [
         "-m",
         "src.mcp_server",
         "/home/rdmueller/projects/asciidoc-mcp-q"
       ],
       "env": {
-        "PYTHONPATH": "/home/rdmueller/projects/asciidoc-mcp-q"
+        "PYTHONPATH": "/home/rdmueller/projects/asciidoc-mcp-q",
+        "DISABLE_WEBSERVER": "true"
       }
     },
     "serena": {

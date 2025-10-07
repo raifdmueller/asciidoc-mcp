@@ -29,7 +29,21 @@ class WebserverManager:
         self.webserver_started = False
 
     def find_free_port(self, start_port: int = 8080) -> int:
-        """Find first available port"""
+        """Find first available port using OS-assigned port for tests"""
+        import os
+        
+        # For tests, always use OS-assigned port to avoid conflicts
+        if 'pytest' in os.environ.get('_', '') or 'PYTEST_CURRENT_TEST' in os.environ:
+            try:
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                sock.bind(('localhost', 0))  # Let OS assign port
+                port = sock.getsockname()[1]
+                sock.close()
+                return port
+            except OSError:
+                pass
+        
+        # For normal operation, try preferred range first
         for port in range(start_port, start_port + 20):
             try:
                 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -38,7 +52,16 @@ class WebserverManager:
                 return port
             except OSError:
                 continue
-        return start_port
+        
+        # Final fallback: OS-assigned port
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.bind(('localhost', 0))
+            port = sock.getsockname()[1]
+            sock.close()
+            return port
+        except OSError:
+            return start_port
 
     def start_webserver_thread(self):
         """Start webserver in background thread (like Serena)"""
