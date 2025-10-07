@@ -6,7 +6,7 @@ Tests the document_api module which handles document structure, sections, and me
 
 import pytest
 from pathlib import Path
-from src.mcp.document_api import DocumentAPI
+from src.mcp_internal.document_api import DocumentAPI
 from src.mcp_server import MCPDocumentationServer
 
 
