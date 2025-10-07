@@ -36,8 +36,14 @@
         }
         .header button:hover { background: #007acc; color: white; }
 
+        .search-container {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-right: 10px;
+        }
+        
         #search-input {
-            margin-right: 5px;
             padding: 8px 12px;
             border: 1px solid #dee2e6;
             border-radius: 4px;
@@ -47,6 +53,26 @@
         #search-input:focus {
             outline: none;
             border-color: #007acc;
+        }
+        
+        #clear-search, #search-prev, #search-next {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 8px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            min-width: 30px;
+        }
+        #clear-search:hover, #search-prev:hover, #search-next:hover {
+            background: #007acc;
+            color: white;
+        }
+        
+        #search-counter {
+            font-size: 12px;
+            color: #666;
+            margin-left: 5px;
         }
 
         #clear-search {
@@ -70,6 +96,23 @@
 
         .search-match {
             font-weight: bold;
+        }
+
+        .search-current {
+            background-color: #007acc !important;
+            color: white !important;
+            border-left: 4px solid #0056b3 !important;
+            padding-left: 8px !important;
+        }
+
+        .search-context {
+            background-color: #e7f3ff !important;
+        }
+
+        #search-prev:disabled, #search-next:disabled {
+            background: #e9ecef;
+            color: #6c757d;
+            cursor: not-allowed;
         }
 
         .hidden {
@@ -303,8 +346,13 @@
         <button onclick="loadStructure()">Load Structure</button>
         <button onclick="loadMetadata()">Load Metadata</button>
         <button onclick="validateStructure()">Validate Structure</button>
-        <input type="text" id="search-input" placeholder="Search sections..." />
-        <button id="clear-search" style="display: none;">×</button>
+        <div class="search-container">
+            <input type="text" id="search-input" placeholder="Search files and content..." />
+            <button id="clear-search" style="display: none;">×</button>
+            <button id="search-prev" style="display: none;" title="Previous result">↑</button>
+            <button id="search-next" style="display: none;" title="Next result">↓</button>
+            <span id="search-counter" style="display: none;"></span>
+        </div>
     </div>
 
     <div class="main-container">
@@ -590,6 +638,7 @@
         function createSectionElement(section) {
             const div = document.createElement('div');
             div.className = `section level-${section.level}`;
+            div.setAttribute('data-section-id', section.id);
 
             const hasChildren = section.children && section.children.length > 0;
             const expandIcon = hasChildren ? '▶' : '•';
@@ -740,11 +789,30 @@
             // Debounced filtering
             clearTimeout(searchDebounceTimer);
             searchDebounceTimer = setTimeout(() => {
-                filterSections(searchTerm);
+                performSearch(searchTerm);
             }, 300);
         });
 
         clearButton.addEventListener('click', clearSearch);
+
+        // Search navigation event listeners
+        const searchPrevButton = document.getElementById('search-prev');
+        const searchNextButton = document.getElementById('search-next');
+        
+        searchPrevButton.addEventListener('click', navigateToPreviousResult);
+        searchNextButton.addEventListener('click', navigateToNextResult);
+
+        // Keyboard navigation for search
+        searchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (e.shiftKey) {
+                    navigateToPreviousResult();
+                } else {
+                    navigateToNextResult();
+                }
+            }
+        });
 
         // Auto-load structure when page loads
         document.addEventListener('DOMContentLoaded', () => {
@@ -754,64 +822,250 @@
         function clearSearch() {
             searchInput.value = '';
             clearButton.style.display = 'none';
-            filterSections('');
+            performSearch('');
         }
 
-        function filterSections(searchTerm) {
-            const navContent = document.getElementById('navigation-content');
-            const allSections = navContent.querySelectorAll('.section');
+        // Search state management
+        let currentSearchResults = [];
+        let currentSearchIndex = -1;
+        let searchContentResults = [];
 
+        async function performSearch(searchTerm) {
+            const navContent = document.getElementById('navigation-content');
+            
             if (!searchTerm) {
-                // Show all sections, remove highlights
-                allSections.forEach(section => {
-                    section.classList.remove('hidden', 'search-highlight', 'search-match');
-                });
+                clearSearchState();
                 return;
             }
 
             const lowerSearchTerm = searchTerm.toLowerCase();
+            
+            // Phase 1: File/folder name filtering (DOM-based, instant)
+            await filterFilesFolders(lowerSearchTerm);
+            
+            // Phase 2: Content search (API-based, async)
+            await searchContent(lowerSearchTerm);
+            
+            // Update search navigation UI
+            updateSearchUI();
+        }
 
-            // Process each section
-            allSections.forEach(section => {
-                const shouldShow = isMatchOrHasMatchingChild(section, lowerSearchTerm);
+        function clearSearchState() {
+            const navContent = document.getElementById('navigation-content');
+            
+            // Clear all search classes AND remove hidden class from all elements
+            navContent.querySelectorAll('.search-highlight, .search-match, .search-context, .search-current')
+                .forEach(el => el.classList.remove('search-highlight', 'search-match', 'search-context', 'search-current'));
+            
+            // Remove hidden class from ALL file and folder items
+            navContent.querySelectorAll('.file-item, .folder-item')
+                .forEach(el => el.classList.remove('hidden'));
+            
+            // Reset search state
+            currentSearchResults = [];
+            currentSearchIndex = -1;
+            searchContentResults = [];
+            updateSearchUI();
+        }
 
-                if (shouldShow) {
-                    section.classList.remove('hidden');
-                } else {
-                    section.classList.add('hidden');
+        async function filterFilesFolders(searchTerm) {
+            const navContent = document.getElementById('navigation-content');
+            const allFiles = navContent.querySelectorAll('.file-item');
+            const allFolders = navContent.querySelectorAll('.folder-item');
+            
+            // Filter files by filename - but don't hide files, just highlight matches
+            allFiles.forEach(fileElement => {
+                const fileName = fileElement.querySelector('.file-name');
+                if (fileName) {
+                    const fileText = fileName.textContent.toLowerCase();
+                    if (fileText.includes(searchTerm)) {
+                        fileElement.classList.add('search-highlight');
+                        fileName.classList.add('search-match');
+                        currentSearchResults.push({
+                            element: fileElement,
+                            type: 'file',
+                            text: fileName.textContent
+                        });
+                    } else {
+                        fileElement.classList.remove('search-highlight');
+                        fileName.classList.remove('search-match');
+                    }
+                    // Keep all files visible - content search will determine visibility
+                    fileElement.classList.remove('hidden');
+                }
+            });
+            
+            // Filter folders by name - highlight matches but keep all visible
+            allFolders.forEach(folderElement => {
+                const folderName = folderElement.querySelector('.folder-name');
+                if (folderName) {
+                    const folderText = folderName.textContent.toLowerCase();
+                    if (folderText.includes(searchTerm)) {
+                        folderElement.classList.add('search-highlight');
+                        folderName.classList.add('search-match');
+                        currentSearchResults.push({
+                            element: folderElement,
+                            type: 'folder',
+                            text: folderName.textContent
+                        });
+                    } else {
+                        folderElement.classList.remove('search-highlight');
+                        folderName.classList.remove('search-match');
+                    }
+                    // Keep all folders visible
+                    folderElement.classList.remove('hidden');
                 }
             });
         }
 
-        function isMatchOrHasMatchingChild(sectionElement, searchTerm) {
-            // Get section title text
-            const titleElement = sectionElement.querySelector('.section-title span:last-child');
-            if (!titleElement) return false;
+        async function searchContent(searchTerm) {
+            try {
+                const response = await fetch(`/api/search?q=${encodeURIComponent(searchTerm)}`);
+                if (!response.ok) return;
+                
+                searchContentResults = await response.json();
+                
+                // Process content search results
+                searchContentResults.forEach(result => {
+                    const sectionElement = document.querySelector(`[data-section-id="${result.id}"]`);
+                    if (sectionElement) {
+                        // Make sure parent file is visible
+                        const parentFile = sectionElement.closest('.file-item');
+                        if (parentFile) {
+                            parentFile.classList.remove('hidden');
+                            parentFile.classList.add('search-context');
+                        }
+                        
+                        // Highlight the matching section
+                        sectionElement.classList.remove('hidden');
+                        sectionElement.classList.add('search-highlight');
+                        
+                        // Add to search results
+                        currentSearchResults.push({
+                            element: sectionElement,
+                            type: 'section',
+                            text: result.title,
+                            snippet: result.snippet,
+                            relevance: result.relevance
+                        });
+                    }
+                });
+                
+                // Sort results by relevance (sections) and then alphabetically (files/folders)
+                currentSearchResults.sort((a, b) => {
+                    if (a.type === 'section' && b.type === 'section') {
+                        return b.relevance - a.relevance;
+                    }
+                    return a.text.localeCompare(b.text);
+                });
+                
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }
 
-            const titleText = titleElement.textContent.toLowerCase();
-            const isMatch = titleText.includes(searchTerm);
-
-            // Apply highlight if match
-            if (isMatch) {
-                sectionElement.classList.add('search-highlight');
-                titleElement.classList.add('search-match');
+        function updateSearchUI() {
+            const resultCount = currentSearchResults.length;
+            const searchPrevButton = document.getElementById('search-prev');
+            const searchNextButton = document.getElementById('search-next');
+            const searchCounter = document.getElementById('search-counter');
+            
+            if (resultCount === 0) {
+                // No results - hide navigation
+                searchPrevButton.style.display = 'none';
+                searchNextButton.style.display = 'none';
+                searchCounter.style.display = 'none';
+                searchCounter.textContent = '';
             } else {
-                sectionElement.classList.remove('search-highlight');
-                titleElement.classList.remove('search-match');
+                // Show navigation
+                searchPrevButton.style.display = 'inline-block';
+                searchNextButton.style.display = 'inline-block';
+                searchCounter.style.display = 'inline-block';
+                
+                // Start with first result if none selected
+                if (currentSearchIndex === -1 && resultCount > 0) {
+                    currentSearchIndex = 0;
+                    highlightCurrentResult();
+                }
+                
+                // Update counter text
+                searchCounter.textContent = `${currentSearchIndex + 1} of ${resultCount}`;
+                
+                // Enable/disable navigation buttons
+                searchPrevButton.disabled = currentSearchIndex <= 0;
+                searchNextButton.disabled = currentSearchIndex >= resultCount - 1;
             }
+        }
 
-            // Check if any child matches (recursive)
-            const childrenContainer = sectionElement.querySelector('.section-children');
-            if (childrenContainer) {
-                const childSections = Array.from(childrenContainer.children);
-                const hasMatchingChild = childSections.some(child =>
-                    isMatchOrHasMatchingChild(child, searchTerm)
-                );
+        function navigateToNextResult() {
+            if (currentSearchResults.length === 0) return;
+            
+            // Clear current highlight
+            clearCurrentHighlight();
+            
+            // Move to next result
+            currentSearchIndex = (currentSearchIndex + 1) % currentSearchResults.length;
+            
+            // Highlight and scroll to result
+            highlightCurrentResult();
+            updateSearchUI();
+        }
 
-                return isMatch || hasMatchingChild;
+        function navigateToPreviousResult() {
+            if (currentSearchResults.length === 0) return;
+            
+            // Clear current highlight
+            clearCurrentHighlight();
+            
+            // Move to previous result
+            currentSearchIndex = currentSearchIndex <= 0 
+                ? currentSearchResults.length - 1 
+                : currentSearchIndex - 1;
+            
+            // Highlight and scroll to result
+            highlightCurrentResult();
+            updateSearchUI();
+        }
+
+        function highlightCurrentResult() {
+            if (currentSearchIndex < 0 || currentSearchIndex >= currentSearchResults.length) return;
+            
+            const result = currentSearchResults[currentSearchIndex];
+            const element = result.element;
+            
+            // Add current result highlighting
+            element.classList.add('search-current');
+            
+            // Ensure parent folders are expanded to show the result
+            expandParentFolders(element);
+            
+            // Scroll element into view
+            element.scrollIntoView({ 
+                behavior: 'smooth', 
+                block: 'center',
+                inline: 'nearest' 
+            });
+        }
+
+        function clearCurrentHighlight() {
+            // Remove search-current class from all elements
+            document.querySelectorAll('.search-current').forEach(el => {
+                el.classList.remove('search-current');
+            });
+        }
+
+        function expandParentFolders(element) {
+            let parent = element.parentElement;
+            while (parent) {
+                if (parent.classList.contains('folder-item')) {
+                    const toggle = parent.querySelector('.folder-toggle');
+                    const content = parent.querySelector('.folder-content');
+                    if (toggle && content && !content.classList.contains('expanded')) {
+                        toggle.click(); // Expand the folder
+                    }
+                }
+                parent = parent.parentElement;
             }
-
-            return isMatch;
         }
 
         // Cookie functions
