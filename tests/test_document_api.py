@@ -864,3 +864,67 @@ Content for B.1
         # All should be level 2
         for section_data in level_2_only.values():
             assert section_data['level'] == 2
+
+
+class TestNavigationSortingBDD:
+    """BDD tests for Issue #68: Navigation tree sorting"""
+
+    @pytest.fixture
+    def multi_file_unsorted_server(self, tmp_path):
+        """Create server with multiple files that would be unsorted by filesystem order"""
+        # Create files in non-alphabetical filesystem order
+        (tmp_path / "zebra.adoc").write_text("""
+= Zebra Documentation
+
+== Zebra Section
+Content about zebras.
+""")
+        
+        (tmp_path / "alpha.adoc").write_text("""
+= Alpha Documentation
+
+== Alpha Section  
+Content about alpha.
+""")
+        
+        (tmp_path / "beta.adoc").write_text("""
+= Beta Documentation
+
+== Beta Section
+Content about beta.
+""")
+        
+        # Ensure filesystem creation order is not alphabetical
+        # by creating in Z, A, B order (already done above)
+        
+        server = MCPDocumentationServer(tmp_path, enable_webserver=False)
+        return server
+
+    def test_api_structure_returns_files_in_alphabetical_order(self, multi_file_unsorted_server):
+        """
+        BDD Test: API structure endpoint returns files in alphabetical order
+        
+        Given multiple AsciiDoc files exist in the project with names: zebra.adoc, alpha.adoc, beta.adoc
+        When I request the structure via get_root_files_structure API
+        Then files should be returned in alphabetical order: alpha.adoc, beta.adoc, zebra.adoc
+        And the API response structure should maintain alphabetical key ordering
+        """
+        # When: Request structure from API
+        result = multi_file_unsorted_server.doc_api.get_root_files_structure()
+        
+        # Then: Files should be returned in alphabetical order
+        file_paths = list(result.keys())
+        expected_order = ['alpha.adoc', 'beta.adoc', 'zebra.adoc']
+        
+        # Extract just the filenames from paths for comparison
+        actual_filenames = [Path(path).name for path in file_paths]
+        
+        # This test will FAIL initially because backend doesn't sort
+        assert actual_filenames == expected_order, f"Expected alphabetical order {expected_order}, got {actual_filenames}"
+        
+        # Verify the structure data is correct
+        assert len(result) == 3
+        for file_path, file_data in result.items():
+            assert 'filename' in file_data
+            assert 'sections' in file_data
+            assert file_data['section_count'] > 0
