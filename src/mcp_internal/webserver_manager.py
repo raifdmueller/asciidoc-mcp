@@ -71,7 +71,10 @@ class WebserverManager:
 
         # Start uvicorn in daemon thread
         def run_server():
-            from src import web_server
+            import sys
+            import os
+            sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+            import web_server
             # Set the global doc_server
             web_server.doc_server = self.server
 

@@ -8,7 +8,7 @@ import pytest
 import socket
 from pathlib import Path
 from unittest.mock import Mock, patch, MagicMock
-from src.mcp.webserver_manager import WebserverManager
+from src.mcp_internal.webserver_manager import WebserverManager
 from src.mcp_server import MCPDocumentationServer
 
 
@@ -123,7 +123,7 @@ class TestWebserverManager:
         wm = WebserverManager(test_server)
 
         # Mock socket in the webserver_manager module where it's imported
-        with patch('src.mcp.webserver_manager.socket.socket') as mock_socket_class:
+        with patch('src.mcp_internal.webserver_manager.socket.socket') as mock_socket_class:
             mock_socket = MagicMock()
             mock_socket_class.return_value = mock_socket
 
