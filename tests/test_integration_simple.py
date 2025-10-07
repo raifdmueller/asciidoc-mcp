@@ -15,6 +15,7 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 from document_parser import DocumentParser
+from mcp_server import MCPDocumentationServer
 
 class TestIssue57Integration(unittest.TestCase):
     """Integration test for Issue #57 section navigation enhancement"""
@@ -39,7 +40,9 @@ Content for section 2.
 With multiple lines.
 """)
         
-        self.parser = DocumentParser(self.test_dir)
+        # Initialize the MCP server (which includes DocumentAPI)
+        self.server = MCPDocumentationServer(self.test_dir)
+        self.server.parse_project(test_doc)
     
     def tearDown(self):
         """Clean up test environment"""
@@ -47,8 +50,8 @@ With multiple lines.
     
     def test_section_navigation_core_functionality(self):
         """Test that the core section navigation functionality works"""
-        # Parse document structure
-        structure = self.parser.get_structure()
+        # Parse document structure using DocumentAPI
+        structure = self.server.api.get_root_files_structure()
         
         # Verify we have the expected document structure
         self.assertIn('test-document.adoc', [doc['filename'] for doc in structure.values()])
@@ -78,7 +81,7 @@ With multiple lines.
     def test_full_document_context_api_simulation(self):
         """Test the enhanced API functionality that supports context=full parameter"""
         # This simulates what the web API does when context=full is requested
-        structure = self.parser.get_structure()
+        structure = self.server.api.get_root_files_structure()
         
         # Get the test document
         test_document = None
@@ -92,7 +95,7 @@ With multiple lines.
         section_id = first_section['id']
         
         # Simulate the enhanced API call - get section info
-        section_data = self.parser.get_section(section_id)
+        section_data = self.server.api.get_section(section_id)
         
         # Simulate reading the full document content (what context=full does)
         doc_path = self.test_dir / "test-document.adoc"
@@ -112,7 +115,7 @@ With multiple lines.
     
     def test_section_position_metadata(self):
         """Test that sections have the position metadata needed for auto-scrolling"""
-        structure = self.parser.get_structure()
+        structure = self.server.api.get_root_files_structure()
         
         # Get sections from test document
         test_document = None
