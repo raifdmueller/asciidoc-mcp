@@ -853,9 +853,13 @@
         function clearSearchState() {
             const navContent = document.getElementById('navigation-content');
             
-            // Clear all search classes
+            // Clear all search classes AND remove hidden class from all elements
             navContent.querySelectorAll('.search-highlight, .search-match, .search-context, .search-current')
-                .forEach(el => el.classList.remove('search-highlight', 'search-match', 'search-context', 'search-current', 'hidden'));
+                .forEach(el => el.classList.remove('search-highlight', 'search-match', 'search-context', 'search-current'));
+            
+            // Remove hidden class from ALL file and folder items
+            navContent.querySelectorAll('.file-item, .folder-item')
+                .forEach(el => el.classList.remove('hidden'));
             
             // Reset search state
             currentSearchResults = [];
@@ -869,13 +873,12 @@
             const allFiles = navContent.querySelectorAll('.file-item');
             const allFolders = navContent.querySelectorAll('.folder-item');
             
-            // Filter files by filename
+            // Filter files by filename - but don't hide files, just highlight matches
             allFiles.forEach(fileElement => {
                 const fileName = fileElement.querySelector('.file-name');
                 if (fileName) {
                     const fileText = fileName.textContent.toLowerCase();
                     if (fileText.includes(searchTerm)) {
-                        fileElement.classList.remove('hidden');
                         fileElement.classList.add('search-highlight');
                         fileName.classList.add('search-match');
                         currentSearchResults.push({
@@ -884,20 +887,20 @@
                             text: fileName.textContent
                         });
                     } else {
-                        fileElement.classList.add('hidden');
                         fileElement.classList.remove('search-highlight');
                         fileName.classList.remove('search-match');
                     }
+                    // Keep all files visible - content search will determine visibility
+                    fileElement.classList.remove('hidden');
                 }
             });
             
-            // Filter folders by name  
+            // Filter folders by name - highlight matches but keep all visible
             allFolders.forEach(folderElement => {
                 const folderName = folderElement.querySelector('.folder-name');
                 if (folderName) {
                     const folderText = folderName.textContent.toLowerCase();
                     if (folderText.includes(searchTerm)) {
-                        folderElement.classList.remove('hidden');
                         folderElement.classList.add('search-highlight');
                         folderName.classList.add('search-match');
                         currentSearchResults.push({
@@ -906,10 +909,11 @@
                             text: folderName.textContent
                         });
                     } else {
-                        folderElement.classList.add('hidden');
                         folderElement.classList.remove('search-highlight');
                         folderName.classList.remove('search-match');
                     }
+                    // Keep all folders visible
+                    folderElement.classList.remove('hidden');
                 }
             });
         }
