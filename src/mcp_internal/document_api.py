@@ -299,6 +299,16 @@ class DocumentAPI:
             # Sort root sections by line_start to maintain document order
             root_sections.sort(key=lambda x: self.server.sections[x['id']].line_start)
 
+            # Recursively sort all children by document order
+            def sort_children_recursively(sections):
+                """Sort children sections by line_start recursively"""
+                for section in sections:
+                    if section['children']:
+                        section['children'].sort(key=lambda x: self.server.sections[x['id']].line_start)
+                        sort_children_recursively(section['children'])
+
+            sort_children_recursively(root_sections)
+
             # Create file entry in the expected format
             structure[rel_path] = {
                 'filename': root_file.name,
@@ -309,10 +319,42 @@ class DocumentAPI:
 
         return structure
 
+    def _parse_section_path(self, path: str) -> str:
+        """Parse section path, converting hash syntax to dot notation
+        
+        Args:
+            path: Section path in either format:
+                  - Hash syntax: "file.adoc#section-id"
+                  - Dot notation: "file.section-id" 
+                  
+        Returns:
+            Normalized dot notation path
+        """
+        if '#' not in path:
+            return path  # Return as-is for backward compatibility
+        
+        # Split on first hash only
+        file_path, section_id = path.split('#', 1)
+        
+        # Remove file extension to get base name
+        from pathlib import Path
+        file_base = Path(file_path).stem
+        
+        # Convert to dot notation
+        return f'{file_base}.{section_id}'
+
     def get_section(self, path: str) -> Optional[Dict[str, Any]]:
-        """Get specific section content"""
-        if path in self.server.sections:
-            section = self.server.sections[path]
+        """Get specific section content
+        
+        Supports both formats:
+        - Hash syntax: "file.adoc#section-id" 
+        - Dot notation: "file.section-id" (backward compatible)
+        """
+        # Parse hash syntax to dot notation if needed
+        parsed_path = self._parse_section_path(path)
+        
+        if parsed_path in self.server.sections:
+            section = self.server.sections[parsed_path]
             return {
                 'id': section.id,
                 'title': section.title,
