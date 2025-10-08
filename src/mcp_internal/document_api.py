@@ -299,6 +299,16 @@ class DocumentAPI:
             # Sort root sections by line_start to maintain document order
             root_sections.sort(key=lambda x: self.server.sections[x['id']].line_start)
 
+            # Recursively sort all children by document order
+            def sort_children_recursively(sections):
+                """Sort children sections by line_start recursively"""
+                for section in sections:
+                    if section['children']:
+                        section['children'].sort(key=lambda x: self.server.sections[x['id']].line_start)
+                        sort_children_recursively(section['children'])
+
+            sort_children_recursively(root_sections)
+
             # Create file entry in the expected format
             structure[rel_path] = {
                 'filename': root_file.name,

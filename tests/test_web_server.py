@@ -58,16 +58,21 @@ Content for section 2.
         
         # Verify that sections have line_start information
         for section_id, section_data in structure.items():
-            self.assertIn('line_start', section_data)
-            self.assertIsInstance(section_data['line_start'], int)
+            # line_start is in the sections array, not at file level
+            self.assertIn('sections', section_data)
+            if section_data['sections']:
+                self.assertIn('line_start', section_data['sections'][0])
+                self.assertIsInstance(section_data['sections'][0]['line_start'], int)
             
         # Verify sections are in a reasonable order (not just random)
         section_items = list(structure.items())
         if len(section_items) >= 2:
             # Just verify we have the data needed for sorting
             first_section = section_items[0][1]
-            self.assertIn('title', first_section)
-            self.assertIn('line_start', first_section)
+            self.assertIn('sections', first_section)
+            if first_section['sections']:
+                self.assertIn('title', first_section['sections'][0])
+                self.assertIn('line_start', first_section['sections'][0])
     
     def test_api_structure_hierarchical_children(self):
         """Test that /api/structure returns hierarchical structure with nested children"""
